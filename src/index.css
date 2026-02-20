@@ -116,7 +116,7 @@ body {
 }
 
 .hero {
-  min-height: 380px;
+  min-height: 430px;
   border-radius: 14px;
   padding: 2.5rem;
   display: flex;
@@ -502,7 +502,7 @@ body {
   }
 
   .hero {
-    min-height: 300px;
+    min-height: 340px;
     padding: 1.3rem;
   }
 
