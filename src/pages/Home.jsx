@@ -81,18 +81,18 @@ export default function Home() {
     };
   }, []);
 
-  const topTenMovies = useMemo(() => {
+  const topTwentyMovies = useMemo(() => {
     const byId = new Map();
     [...trending, ...topRated, ...popular].forEach((movie) => {
       if (movie?.id && !byId.has(movie.id)) {
         byId.set(movie.id, movie);
       }
     });
-    return Array.from(byId.values()).slice(0, 10);
+    return Array.from(byId.values()).slice(0, 20);
   }, [trending, topRated, popular]);
 
   useEffect(() => {
-    if (topTenMovies.length <= 1) {
+    if (topTwentyMovies.length <= 1) {
       setActiveHeroIndex(0);
       setHeroTick(0);
       return;
@@ -101,16 +101,16 @@ export default function Home() {
     // Advance the hero movie on a timer and restart progress animation.
     setHeroTick((value) => value + 1);
     const interval = window.setInterval(() => {
-      setActiveHeroIndex((current) => (current + 1) % topTenMovies.length);
+      setActiveHeroIndex((current) => (current + 1) % topTwentyMovies.length);
       setHeroTick((value) => value + 1);
     }, HERO_ROTATE_MS);
 
     return () => window.clearInterval(interval);
-  }, [topTenMovies, HERO_ROTATE_MS]);
+  }, [topTwentyMovies, HERO_ROTATE_MS]);
 
   const heroMovie = useMemo(
-    () => topTenMovies[activeHeroIndex] || trending[0] || topRated[0],
-    [activeHeroIndex, topTenMovies, trending, topRated]
+    () => topTwentyMovies[activeHeroIndex] || trending[0] || topRated[0],
+    [activeHeroIndex, topTwentyMovies, trending, topRated]
   );
   return (
     <main className="main">
