@@ -2,6 +2,7 @@ import { useState } from "react";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Popular from "./pages/Popular";
+import Anime from "./pages/Anime";
 import Search from "./pages/Search";
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
       <Navbar navigate={navigate} onSearch={handleSearch} activePage={page} />
       {page === "home" && <Home />}
       {page === "popular" && <Popular />}
+      {page === "anime" && <Anime />}
       {page === "search" && <Search query={searchQuery} />}
     </div>
   );

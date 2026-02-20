@@ -21,6 +21,13 @@ export default function Navbar({ navigate, onSearch, activePage }) {
         >
           Popular
         </button>
+        <button
+          type="button"
+          className={activePage === "anime" ? "active" : ""}
+          onClick={() => navigate("anime")}
+        >
+          Anime
+        </button>
       </div>
       <SearchBar onSearch={onSearch} />
     </nav>
