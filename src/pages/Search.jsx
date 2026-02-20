@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { searchMovies } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";
 import MovieModal from "../components/MovieModal";
+import SkeletonGrid from "../components/SkeletonGrid";
 import useMovies from "../hooks/useMovies";
 
 export default function Search({ query }) {
@@ -24,7 +25,7 @@ export default function Search({ query }) {
     <main className="main">
       <section className="rail-section">
         <h3>Results for "{query}"</h3>
-        {loading ? <p className="status-line">Searching...</p> : null}
+        {loading ? <SkeletonGrid count={12} /> : null}
         {error ? <p className="status-line error">{error}</p> : null}
         {!loading && !error ? (
           <MovieGrid movies={results} onSelect={setSelected} emptyMessage="No movies matched your search." />

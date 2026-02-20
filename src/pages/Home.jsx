@@ -3,6 +3,7 @@ import { fetchPopular, fetchTrending, fetchTopRated } from "../api/tmdb";
 import HeroFeatured from "../components/HeroFeatured";
 import MovieRowSlider from "../components/MovieRowSlider";
 import MovieModal from "../components/MovieModal";
+import SkeletonRow from "../components/SkeletonRow";
 
 export default function Home() {
   // Featured hero switches to the next movie on this cadence.
@@ -120,7 +121,13 @@ export default function Home() {
         tick={heroTick}
       />
 
-      {loading ? <p className="status-line">Loading movies...</p> : null}
+      {loading ? (
+        <>
+          <SkeletonRow title="Trending This Week" />
+          <SkeletonRow title="Top Rated" />
+          <SkeletonRow title="Popular Right Now" />
+        </>
+      ) : null}
       {error ? <p className="status-line error">{error}</p> : null}
 
       {!loading && !error ? (

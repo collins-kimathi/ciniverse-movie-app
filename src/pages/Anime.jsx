@@ -2,6 +2,7 @@ import { useState } from "react";
 import { fetchAnime } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";
 import MovieModal from "../components/MovieModal";
+import SkeletonGrid from "../components/SkeletonGrid";
 import useMovies from "../hooks/useMovies";
 
 export default function Anime() {
@@ -27,7 +28,7 @@ export default function Anime() {
     <main className="main">
       <section className="rail-section">
         <h3>Anime Movies</h3>
-        {loading ? <p className="status-line">Loading anime...</p> : null}
+        {loading ? <SkeletonGrid count={12} /> : null}
         {error ? <p className="status-line error">{error}</p> : null}
         {!loading && !error ? (
           <MovieGrid movies={movies} onSelect={setSelected} emptyMessage="No anime movies found." />
