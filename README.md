@@ -1,16 +1,97 @@
-# React + Vite
+# Ciniverse Movie App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Ciniverse is a React + Vite movie discovery app powered by TMDB.  
+It includes a cinematic home page, popular movies, anime movies, search, movie detail modals, watch provider links, and skeleton loaders.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Home page with:
+  - Featured rotating hero
+  - Trending, Top Rated, and Popular rows
+- Popular page:
+  - Grid of popular movies
+  - `More Movies +` button to load additional pages
+- Anime page:
+  - Anime-focused movie listing from TMDB discover filters
+- Search page:
+  - Search movies by title
+- Movie details modal:
+  - Overview, rating, runtime, trailer (YouTube), and US watch providers
+- Global footer
+- Skeleton loading UI for smoother page loading
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React
+- Vite
+- Plain CSS
+- TMDB API
 
-## Expanding the ESLint configuration
+## Project Setup
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create a `.env.local` file in the project root:
+
+```env
+# Option 1: API key auth
+VITE_TMDB_API_KEY=your_tmdb_api_key
+
+# Option 2: Bearer token auth (preferred)
+VITE_TMDB_BEARER_TOKEN=your_tmdb_bearer_token
+```
+
+You can use either variable. If `VITE_TMDB_BEARER_TOKEN` is set, it is used automatically.
+
+3. Start development server:
+
+```bash
+npm run dev
+```
+
+4. Build for production:
+
+```bash
+npm run build
+```
+
+5. Preview production build:
+
+```bash
+npm run preview
+```
+
+## Available Routes / Views
+
+- `Home`
+- `Popular`
+- `Anime`
+- `Search` (triggered from navbar search)
+
+Navigation is handled in-app via the top navbar.
+
+## Environment Notes
+
+- The app uses TMDB image base path `https://image.tmdb.org/t/p/w500`.
+- Watch provider data in the modal is shown for `US` region.
+
+## Scripts
+
+- `npm run dev` - Run local dev server
+- `npm run build` - Production build
+- `npm run preview` - Preview production build
+
+## Folder Highlights
+
+- `src/api/tmdb.js` - TMDB request helpers and endpoints
+- `src/pages/` - Top-level pages (`Home`, `Popular`, `Anime`, `Search`)
+- `src/components/` - UI components (navbar, cards, modal, skeletons, footer)
+- `src/hooks/useMovies.js` - Shared async movie loading hook
+
+## Credits
+
+- Data and images provided by [TMDB](https://www.themoviedb.org/).
