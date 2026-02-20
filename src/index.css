@@ -431,6 +431,14 @@ body {
   font-size: 0.8rem;
 }
 
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.28);
+  padding: 1rem 2.5rem;
+  color: var(--muted);
+  text-align: center;
+}
+
 @media (max-width: 900px) {
   .navbar {
     flex-wrap: wrap;
@@ -443,6 +451,10 @@ body {
 
   .main {
     padding: 1rem 1.2rem 2rem;
+  }
+
+  .site-footer {
+    padding: 1rem 1.2rem;
   }
 
   .hero {

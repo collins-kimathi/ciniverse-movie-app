@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Popular from "./pages/Popular";
 import Anime from "./pages/Anime";
@@ -36,6 +37,7 @@ export default function App() {
       {page === "popular" && <Popular />}
       {page === "anime" && <Anime />}
       {page === "search" && <Search query={searchQuery} />}
+      <Footer />
     </div>
   );
 }
