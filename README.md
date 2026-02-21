@@ -95,3 +95,8 @@ Navigation is handled in-app via the top navbar.
 ## Credits
 
 - Data and images provided by [TMDB](https://www.themoviedb.org/).
+
+## created by 
+collins-kimathi
+
+## if you find this repo good please star it 
