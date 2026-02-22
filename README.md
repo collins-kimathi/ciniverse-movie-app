@@ -99,4 +99,4 @@ Navigation is handled in-app via the top navbar.
 ## created by 
 collins-kimathi
 
-## if you find this repo good please star it 
+## if you find this repo good please star it.
