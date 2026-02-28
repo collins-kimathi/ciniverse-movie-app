@@ -1,6 +1,8 @@
 const BASE_URL = "https://api.themoviedb.org/3";
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY || "";
-const BEARER_TOKEN = import.meta.env.VITE_TMDB_BEARER_TOKEN || "";
+const BEARER_TOKEN =
+  import.meta.env.VITE_TMDB_BEARER_TOKEN ||
+  "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2MTI2M2E4YzUxN2NjZGYwZTY1MzBjNzFlZTU1N2IxNSIsIm5iZiI6MTc3MTU3ODY4MS41OCwic3ViIjoiNjk5ODI1MzlmMjU3MDRiZjhlYWI5MGQ3Iiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.1OFbQMizTSTZrKhxcefW48zvP8ajF7VVteVgAuCGbpk";
 
 export const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
@@ -41,15 +43,17 @@ async function request(path) {
 
 export const fetchTrending = (page = 1) =>
   request(`/trending/movie/week?page=${page}`);
-export const fetchPopular = (page = 1) => request(`/movie/popular?page=${page}`);
+export const fetchPopular = (page = 1) =>
+  request(`/movie/popular?page=${page}`);
 export const fetchTopRated = (page = 1) =>
   request(`/movie/top_rated?page=${page}`);
 export const fetchAnime = (page = 1) =>
   request(
-    `/discover/movie?include_adult=false&include_video=false&sort_by=popularity.desc&with_genres=16&with_origin_country=JP&page=${page}`
+    `/discover/movie?include_adult=false&include_video=false&sort_by=popularity.desc&with_genres=16&with_origin_country=JP&page=${page}`,
   );
 export const searchMovies = (query) =>
   request(`/search/movie?query=${encodeURIComponent(query)}`);
 export const fetchMovieDetails = (id) =>
   request(`/movie/${id}?append_to_response=videos,credits`);
-export const fetchWatchProviders = (id) => request(`/movie/${id}/watch/providers`);
+export const fetchWatchProviders = (id) =>
+  request(`/movie/${id}/watch/providers`);
