@@ -80,7 +80,12 @@ export default function SearchBar({ onSearch }) {
         aria-label={mobileOpen ? "Close search" : "Open search"}
         onClick={() => setMobileOpen((prev) => !prev)}
       >
-        <span aria-hidden="true">Find</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+          <path
+            d="M15.5 14h-.79l-.28-.27a6 6 0 1 0-.71.71l.27.28v.79L20 21.49 21.49 20zM10 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10"
+            fill="currentColor"
+          />
+        </svg>
       </button>
       <div className="search-form-fields">
         <input
