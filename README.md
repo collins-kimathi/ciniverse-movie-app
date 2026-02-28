@@ -1,7 +1,7 @@
 # Ciniverse Movie App
 
 Ciniverse is a React + Vite movie discovery app powered by TMDB.  
-It includes a cinematic home page, popular movies, anime movies, search, movie detail modals, watch provider links, and skeleton loaders.
+It includes a cinematic home page, popular movies, anime movies, search, movie detail modals, licensed in-app playback, and skeleton loaders.
 
 ## Features
 
@@ -16,7 +16,7 @@ It includes a cinematic home page, popular movies, anime movies, search, movie d
 - Search page:
   - Search movies by title
 - Movie details modal:
-  - Overview, rating, runtime, trailer (YouTube), and US watch providers
+  - Overview, rating, runtime, trailer (YouTube), and licensed full-movie playback
 - Global footer
 - Skeleton loading UI for smoother page loading
 
@@ -110,7 +110,7 @@ Navigation is handled in-app via the top navbar.
 ## Environment Notes
 
 - The app uses TMDB image base path `https://image.tmdb.org/t/p/w500`.
-- Watch provider data in the modal is shown for `US` region.
+- Full-movie playback comes from your licensed playback backend.
 
 ## Scripts
 

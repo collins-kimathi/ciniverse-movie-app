@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { fetchMovieDetails, fetchWatchProviders, IMG_BASE } from "../api/tmdb";
+import { fetchMovieDetails, IMG_BASE } from "../api/tmdb";
 import { fetchLicensedPlaybackSession } from "../api/playback";
 
 export default function MovieModal({ movie, onClose }) {
   const [details, setDetails] = useState(null);
-  const [providers, setProviders] = useState(null);
   const [showTrailer, setShowTrailer] = useState(false);
   const [showFullMovie, setShowFullMovie] = useState(false);
   const [playback, setPlayback] = useState(null);
@@ -17,7 +16,6 @@ export default function MovieModal({ movie, onClose }) {
 
     async function loadDetails() {
       setDetails(null);
-      setProviders(null);
       setShowTrailer(false);
       setShowFullMovie(false);
       setPlayback(null);
@@ -26,14 +24,9 @@ export default function MovieModal({ movie, onClose }) {
       setError("");
 
       try {
-        // Fetch details + provider info together to reduce wait time.
-        const [data, watchData] = await Promise.all([
-          fetchMovieDetails(movie.id),
-          fetchWatchProviders(movie.id),
-        ]);
+        const data = await fetchMovieDetails(movie.id);
         if (!cancelled) {
           setDetails(data);
-          setProviders(watchData?.results?.US || null);
         }
       } catch {
         if (!cancelled) {
@@ -95,10 +88,6 @@ export default function MovieModal({ movie, onClose }) {
     typeof details.vote_average === "number" ? details.vote_average.toFixed(1) : "N/A";
   const year = details.release_date?.slice(0, 4) || "Unknown";
   const runtime = details.runtime ? `${details.runtime} min` : "Unknown runtime";
-  const flatrateNames = providers?.flatrate?.map((p) => p.provider_name) || [];
-  const rentNames = providers?.rent?.map((p) => p.provider_name) || [];
-  const buyNames = providers?.buy?.map((p) => p.provider_name) || [];
-  const providerLink = providers?.link || "";
   const hasPlayback = Boolean(playback?.src);
 
   async function onWatchFullMovie() {
@@ -214,54 +203,6 @@ export default function MovieModal({ movie, onClose }) {
                 />
               </div>
             ) : null}
-            <div className="providers">
-              <h3>Where To Watch (US)</h3>
-              {providerLink ? (
-                <div className="provider-actions">
-                  <a
-                    href={providerLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="provider-link-btn"
-                  >
-                    Open Legal Watch Options
-                  </a>
-                </div>
-              ) : null}
-              {flatrateNames.length ? (
-                <div className="provider-list">
-                  <strong>Streaming:</strong>
-                  <div className="provider-chips">
-                    {flatrateNames.map((name) => (
-                      <span key={`stream-${name}`} className="provider-chip">{name}</span>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              {rentNames.length ? (
-                <div className="provider-list">
-                  <strong>Rent:</strong>
-                  <div className="provider-chips">
-                    {rentNames.map((name) => (
-                      <span key={`rent-${name}`} className="provider-chip">{name}</span>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              {buyNames.length ? (
-                <div className="provider-list">
-                  <strong>Buy:</strong>
-                  <div className="provider-chips">
-                    {buyNames.map((name) => (
-                      <span key={`buy-${name}`} className="provider-chip">{name}</span>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              {!flatrateNames.length && !rentNames.length && !buyNames.length ? (
-                <p>No provider data available from TMDB.</p>
-              ) : null}
-            </div>
           </div>
         </div>
       </div>
