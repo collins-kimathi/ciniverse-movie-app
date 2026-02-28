@@ -163,6 +163,11 @@ export default function MovieModal({ movie, onClose }) {
   const trailer = details.videos?.results?.find(
     (v) => v.type === "Trailer" && v.site === "YouTube"
   );
+  const trailerSrc = trailer?.key
+    ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0`
+    : `https://www.youtube.com/embed?autoplay=1&rel=0&listType=search&list=${encodeURIComponent(
+        `${title} official trailer`
+      )}`;
   const poster = details.poster_path
     ? `${IMG_BASE}${details.poster_path}`
     : "https://via.placeholder.com/300x450?text=No+Image";
@@ -415,23 +420,21 @@ export default function MovieModal({ movie, onClose }) {
                 </p>
               </div>
             ) : null}
-            {trailer ? (
-              <button
-                type="button"
-                className="trailer-btn"
-                onClick={() => {
-                  setShowTrailer((prev) => !prev);
-                  trackEvent("toggle_trailer", { id: activeMovie.id, title });
-                }}
-              >
-                {showTrailer ? "Hide Trailer" : "Watch Trailer Here"}
-              </button>
-            ) : null}
-            {showTrailer && trailer ? (
+            <button
+              type="button"
+              className="trailer-btn"
+              onClick={() => {
+                setShowTrailer((prev) => !prev);
+                trackEvent("toggle_trailer", { id: activeMovie.id, title });
+              }}
+            >
+              {showTrailer ? "Hide Trailer" : "Watch Trailer Here"}
+            </button>
+            {showTrailer ? (
               <div className="trailer-frame-wrap">
                 <iframe
                   title={`${title} trailer`}
-                  src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0`}
+                  src={trailerSrc}
                   allow="autoplay; encrypted-media; picture-in-picture"
                   allowFullScreen
                 />

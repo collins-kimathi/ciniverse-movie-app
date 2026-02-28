@@ -6,7 +6,6 @@ import MovieModal from "../components/MovieModal";
 import SkeletonRow from "../components/SkeletonRow";
 import SectionError from "../components/SectionError";
 import useMovies from "../hooks/useMovies";
-import { readContinueWatching } from "../utils/library";
 import { GENRE_SECTIONS } from "../config/genres";
 import { applyFilters } from "../utils/filters";
 
@@ -60,7 +59,6 @@ export default function Home({
   const [selected, setSelected] = useState(null);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroTick, setHeroTick] = useState(0);
-  const [continueWatching, setContinueWatching] = useState([]);
   const [filters, setFilters] = useState({
     year: "all",
     minRating: 0,
@@ -94,10 +92,6 @@ export default function Home({
     [],
     { errorMessage: "Could not load top rated movies." }
   );
-
-  useEffect(() => {
-    setContinueWatching(readContinueWatching());
-  }, [selected]);
 
   useEffect(() => {
     if (!watchTarget) {
@@ -201,15 +195,6 @@ export default function Home({
           Japanese
         </button>
       </section>
-
-      {continueWatching.length ? (
-        <MovieRowSlider
-          title="Continue Watching"
-          movies={continueWatching}
-          onSelect={setSelected}
-          emptyMessage=""
-        />
-      ) : null}
 
       {trendingLoading ? <SkeletonRow title="Trending This Week" /> : null}
       {trendingError ? <SectionError message={trendingError} onRetry={retryTrending} /> : null}
