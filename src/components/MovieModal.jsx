@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchMovieDetails, IMG_BASE } from "../api/tmdb";
-import { fetchLicensedPlaybackSession } from "../api/playback";
+import { fetchLicensedPlaybackSession, isPlaybackEnabled } from "../api/playback";
 
 export default function MovieModal({ movie, onClose }) {
   const [details, setDetails] = useState(null);
@@ -80,7 +80,6 @@ export default function MovieModal({ movie, onClose }) {
   const trailer = details.videos?.results?.find(
     (v) => v.type === "Trailer" && v.site === "YouTube"
   );
-  const hasPlaybackConfig = Boolean(import.meta.env.VITE_PLAYBACK_API_BASE_URL);
   const poster = details.poster_path
     ? `${IMG_BASE}${details.poster_path}`
     : "https://via.placeholder.com/300x450?text=No+Image";
@@ -136,7 +135,7 @@ export default function MovieModal({ movie, onClose }) {
               Rating: {rating} | {year} | {runtime}
             </p>
             <p>{details.overview || "No overview available."}</p>
-            {hasPlaybackConfig ? (
+            {isPlaybackEnabled ? (
               <button
                 type="button"
                 className="stream-btn"
@@ -151,7 +150,7 @@ export default function MovieModal({ movie, onClose }) {
               </button>
             ) : (
               <p className="status-line">
-                Full-movie streaming is disabled. Add a licensed playback API to enable it.
+                Full-movie streaming is disabled. Add a licensed playback API or demo stream.
               </p>
             )}
             {playbackError ? <p className="status-line error">{playbackError}</p> : null}
