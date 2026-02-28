@@ -389,7 +389,7 @@ body {
   border: none;
   width: 100%;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: 14px;
   overflow: hidden;
   background: var(--panel);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -430,12 +430,12 @@ body {
 }
 
 .card img.loading {
-  filter: blur(10px);
-  transform: scale(1.04);
+  filter: none;
+  transform: scale(1);
 }
 
 .card img.loaded {
-  filter: blur(0);
+  filter: none;
   transform: scale(1);
 }
 
@@ -708,7 +708,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.03);
   color: var(--text);
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   text-align: left;
   cursor: pointer;
