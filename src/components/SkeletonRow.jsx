@@ -9,8 +9,8 @@ export default function SkeletonRow({ title = "Loading..." }) {
           <div key={`skeleton-row-${index}`} className="card skeleton-card" aria-hidden="true">
             <div className="skeleton-poster" />
             <div className="card-info">
-              <div className="skeleton-line w-80" />
-              <div className="skeleton-line w-55" />
+              <div className="skeleton-line skeleton-w-80" />
+              <div className="skeleton-line skeleton-w-55" />
             </div>
           </div>
         ))}
