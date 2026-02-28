@@ -1,13 +1,7 @@
 const PLAYBACK_API_BASE_URL = import.meta.env.VITE_PLAYBACK_API_BASE_URL || "";
 const PLAYBACK_API_KEY = import.meta.env.VITE_PLAYBACK_API_KEY || "";
-const DEMO_PLAYBACK_MP4_SRC =
-  import.meta.env.VITE_PLAYBACK_DEMO_MP4_SRC ||
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-const DEMO_PLAYBACK_POSTER =
-  import.meta.env.VITE_PLAYBACK_DEMO_POSTER ||
-  "https://peach.blender.org/wp-content/uploads/title_anouncement.jpg";
 
-export const isPlaybackEnabled = Boolean(PLAYBACK_API_BASE_URL || DEMO_PLAYBACK_MP4_SRC);
+export const isPlaybackEnabled = Boolean(PLAYBACK_API_BASE_URL);
 
 function buildPlaybackHeaders() {
   const headers = {
@@ -41,24 +35,9 @@ function normalizePlayback(payload) {
   };
 }
 
-function getDemoPlayback() {
-  if (!DEMO_PLAYBACK_MP4_SRC) {
-    return null;
-  }
-
-  return {
-    type: "mp4",
-    src: DEMO_PLAYBACK_MP4_SRC,
-    poster: DEMO_PLAYBACK_POSTER,
-    provider: "Demo Licensed Catalog",
-    region: "Global",
-    expiresAt: "",
-  };
-}
-
 export async function fetchLicensedPlaybackSession(movieId) {
   if (!PLAYBACK_API_BASE_URL) {
-    return getDemoPlayback();
+    return null;
   }
 
   const response = await fetch(
@@ -70,7 +49,7 @@ export async function fetchLicensedPlaybackSession(movieId) {
   );
 
   if (response.status === 204 || response.status === 404) {
-    return getDemoPlayback();
+    return null;
   }
 
   if (!response.ok) {
@@ -78,5 +57,5 @@ export async function fetchLicensedPlaybackSession(movieId) {
   }
 
   const payload = await response.json();
-  return normalizePlayback(payload) || getDemoPlayback();
+  return normalizePlayback(payload);
 }

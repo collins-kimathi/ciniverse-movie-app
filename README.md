@@ -50,16 +50,12 @@ VITE_PLAYBACK_API_BASE_URL=http://localhost:4000
 # Optional shared key sent as x-api-key header to your backend
 VITE_PLAYBACK_API_KEY=your_playback_api_key
 
-# Optional fallback demo full-movie stream (used when backend is unavailable)
-VITE_PLAYBACK_DEMO_MP4_SRC=https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
-VITE_PLAYBACK_DEMO_POSTER=https://peach.blender.org/wp-content/uploads/title_anouncement.jpg
-
 # Region for TMDB legal provider redirect links
 VITE_WATCH_REGION=US
 ```
 
 You can use either variable. If `VITE_TMDB_BEARER_TOKEN` is set, it is used automatically.
-Full-movie playback works from your licensed backend, and falls back to the demo stream if the backend is unavailable.
+Full-movie playback works only from your licensed backend.
 
 ### Licensed playback endpoint contract
 
@@ -86,7 +82,6 @@ Notes:
 - Return `404` (or `204`) if the movie is not licensed for playback.
 - `playback.type` can be `iframe`, `hls`, `dash`, or `mp4`.
 - Your backend should enforce entitlement, region, and expiration checks before returning stream URLs.
-- If no backend session is returned, the frontend uses `VITE_PLAYBACK_DEMO_MP4_SRC` for immediate playback.
 
 3. Start development server:
 

@@ -160,7 +160,7 @@ export default function MovieModal({ movie, onClose }) {
               </button>
             ) : (
               <p className="status-line">
-                Full-movie streaming is disabled. Add a licensed playback API or demo stream.
+                Full-movie streaming is disabled. Add a licensed playback API to enable it.
               </p>
             )}
             {playbackError ? <p className="status-line error">{playbackError}</p> : null}
