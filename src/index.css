@@ -102,6 +102,24 @@ body {
   position: relative;
 }
 
+.search-form-fields {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.mobile-search-toggle {
+  display: none;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
 .search-form input {
   width: 270px;
   padding: 0.55rem 0.95rem;
@@ -735,10 +753,7 @@ body {
   }
 
   .install-btn {
-    order: 2;
-    margin-left: auto;
-    padding: 0.4rem 0.7rem;
-    font-size: 0.78rem;
+    display: none;
   }
 
   .nav-links {
@@ -761,6 +776,7 @@ body {
   .search-form {
     order: 4;
     width: 100%;
+    margin-top: 0.15rem;
   }
 
   .search-form input {
@@ -801,8 +817,8 @@ body {
   }
 
   .row-slider-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.7rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
   }
 
   .grid {
@@ -811,7 +827,7 @@ body {
   }
 
   .card img {
-    height: 190px;
+    height: 180px;
   }
 
   .row-head {
@@ -884,16 +900,35 @@ body {
     max-width: 95%;
   }
 
+  /* Netflix-like touch rails on phones */
   .row-slider-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(42vw, 165px);
+    grid-template-columns: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 0.55rem;
+    padding-bottom: 0.2rem;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .row-slider-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .row-slider-grid .card {
+    scroll-snap-align: start;
   }
 
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
   }
 
   .card img {
-    height: 170px;
+    height: 165px;
   }
 
   .modal {
@@ -913,6 +948,23 @@ body {
     right: 0.6rem;
   }
 
+  .modal-info h2 {
+    font-size: 1.2rem;
+    padding-right: 1.8rem;
+  }
+
+  .modal-info p {
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+
+  .modal-actions .row-more-btn,
+  .row-head-actions .row-more-btn,
+  .row-head-actions .row-link-btn {
+    font-size: 0.78rem;
+    padding: 0.3rem 0.62rem;
+  }
+
   .similar-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.45rem;
@@ -920,6 +972,88 @@ body {
 }
 
 @media (max-width: 420px) {
+  .navbar {
+    padding: 0.62rem 0.62rem 0.55rem;
+  }
+
+  .search-form input {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .search-form button {
+    padding: 0.5rem 0.65rem;
+  }
+
+  .mobile-search-toggle {
+    display: inline-flex;
+  }
+
+  .search-form {
+    width: auto;
+    margin-left: auto;
+  }
+
+  .search-form-fields {
+    display: none;
+  }
+
+  .search-form.mobile-open {
+    width: 100%;
+  }
+
+  .search-form.mobile-open .search-form-fields {
+    display: flex;
+    flex: 1;
+  }
+
+  .search-form.mobile-open input {
+    width: 100%;
+  }
+
+  .search-form.mobile-open .mobile-search-toggle {
+    background: rgba(229, 9, 20, 0.2);
+    border-color: rgba(229, 9, 20, 0.5);
+  }
+
+  .search-suggestions {
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+
+  .main {
+    padding: 0.65rem 0.55rem 1.2rem;
+  }
+
+  .hero {
+    min-height: 220px;
+    padding: 0.8rem;
+  }
+
+  .hero h2 {
+    font-size: clamp(1.2rem, 7.2vw, 1.6rem);
+  }
+
+  .hero p {
+    font-size: 0.82rem;
+  }
+
+  .row-slider-grid {
+    grid-auto-columns: minmax(48vw, 150px);
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card img {
+    height: 150px;
+  }
+
+  .modal {
+    max-height: 96vh;
+    padding: 0.75rem;
+  }
+
   .search-form button {
     padding: 0.5rem 0.75rem;
   }
