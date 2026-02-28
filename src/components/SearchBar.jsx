@@ -6,6 +6,7 @@ export default function SearchBar({ onSearch }) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [recent, setRecent] = useState([]);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     setRecent(readRecentSearches());
@@ -52,19 +53,34 @@ export default function SearchBar({ onSearch }) {
     pushRecentSearch(value);
     setRecent(readRecentSearches());
     setFocused(false);
+    setMobileOpen(false);
   }
 
   return (
-    <form onSubmit={submit} className="search-form" autoComplete="off">
-      <input
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => window.setTimeout(() => setFocused(false), 120)}
-        placeholder="Search movies"
-        aria-label="Search movies"
-      />
-      <button type="submit">Search</button>
+    <form
+      onSubmit={submit}
+      className={`search-form ${mobileOpen ? "mobile-open" : ""}`}
+      autoComplete="off"
+    >
+      <button
+        type="button"
+        className="mobile-search-toggle"
+        aria-label={mobileOpen ? "Close search" : "Open search"}
+        onClick={() => setMobileOpen((prev) => !prev)}
+      >
+        <span aria-hidden="true">🔍</span>
+      </button>
+      <div className="search-form-fields">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => window.setTimeout(() => setFocused(false), 120)}
+          placeholder="Search movies"
+          aria-label="Search movies"
+        />
+        <button type="submit">Search</button>
+      </div>
       {focused && filteredRecent.length ? (
         <div className="search-suggestions" role="listbox" aria-label="Recent searches">
           {filteredRecent.map((item) => (
