@@ -31,9 +31,9 @@ export default function Search({ query, watchTarget = null, onConsumeWatchTarget
   }, [watchTarget, onConsumeWatchTarget]);
 
   return (
-    <main className="main">
-      <section className="rail-section">
-        <h3>Results for "{query}"</h3>
+    <main className="px-3 pb-7 pt-4 md:px-10 md:pb-10 md:pt-6">
+      <section className="mb-8">
+        <h3 className="mb-4 text-xl">Results for "{query}"</h3>
         {loading ? <SkeletonGrid count={12} /> : null}
         {error ? <SectionError message={error} onRetry={retry} /> : null}
         {!loading && !error ? (

@@ -51,12 +51,16 @@ export default function MovieCard({ movie, onClick }) {
   return (
     <button
       type="button"
-      className="card"
+      className="relative w-full cursor-pointer overflow-hidden rounded-lg bg-[var(--panel)] text-left transition duration-200 hover:translate-y-[-4px] hover:scale-[1.02] hover:shadow-[0_12px_28px_rgba(0,0,0,0.42)]"
       onClick={() => onClick(movie)}
       aria-label={`Open details for ${title}`}
     >
       {isPlaybackEnabled && licensed != null ? (
-        <span className={`availability-badge ${licensed ? "yes" : "no"}`}>
+        <span
+          className={`absolute left-2 top-2 z-10 rounded-full px-2 py-1 text-[0.65rem] font-bold text-white ${
+            licensed ? "bg-emerald-500/90" : "bg-red-700/90"
+          }`}
+        >
           {licensed ? "Licensed" : "Not Licensed"}
         </span>
       ) : null}
@@ -64,13 +68,15 @@ export default function MovieCard({ movie, onClick }) {
         src={poster}
         alt={title}
         loading="lazy"
-        className={imageLoaded ? "loaded" : "loading"}
+        className={`block h-[180px] w-full object-cover transition duration-200 md:h-[250px] ${
+          imageLoaded ? "scale-100 blur-none" : "scale-[1.04] blur-[10px]"
+        }`}
         onLoad={() => setImageLoaded(true)}
       />
-      <div className="card-info">
-        <h3>{title}</h3>
-        <span>Rating: {rating}</span>
-        <span>{year}</span>
+      <div className="p-3">
+        <h3 className="mb-2 line-clamp-2 min-h-[2.35em] text-sm text-[var(--text)]">{title}</h3>
+        <span className="mr-2 inline-block text-xs text-[var(--muted)]">Rating: {rating}</span>
+        <span className="inline-block text-xs text-[var(--muted)]">{year}</span>
       </div>
     </button>
   );

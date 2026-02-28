@@ -54,6 +54,9 @@ function GenreRail({ section, filters, onSelect, onOpenGenre }) {
   );
 }
 
+const chipBase =
+  "cursor-pointer rounded-full border px-3 py-1.5 text-sm transition";
+
 export default function Home({
   onOpenGenre = () => {},
   watchTarget = null,
@@ -139,8 +142,15 @@ export default function Home({
     [activeHeroIndex, topTwentyMovies, filteredTrending, filteredTopRated]
   );
 
+  const chipClass = (active) =>
+    `${chipBase} ${
+      active
+        ? "border-[rgba(229,9,20,0.5)] bg-[rgba(229,9,20,0.2)] text-[var(--text)]"
+        : "border-white/20 bg-white/5 text-[var(--text)] hover:bg-white/10"
+    }`;
+
   return (
-    <main className="main">
+    <main className="px-3 pb-7 pt-4 md:px-10 md:pb-10 md:pt-6">
       <HeroFeatured
         movie={heroMovie}
         onPlay={setSelected}
@@ -148,52 +158,52 @@ export default function Home({
         tick={heroTick}
       />
 
-      <section className="filter-chips" aria-label="Home filters">
+      <section className="mb-5 flex flex-wrap gap-2" aria-label="Home filters">
         <button
           type="button"
-          className={filters.year === "all" ? "active" : ""}
+          className={chipClass(filters.year === "all")}
           onClick={() => setFilters((f) => ({ ...f, year: "all" }))}
         >
           Any Year
         </button>
         <button
           type="button"
-          className={filters.year === "2020s" ? "active" : ""}
+          className={chipClass(filters.year === "2020s")}
           onClick={() => setFilters((f) => ({ ...f, year: "2020s" }))}
         >
           2020s
         </button>
         <button
           type="button"
-          className={filters.year === "2010s" ? "active" : ""}
+          className={chipClass(filters.year === "2010s")}
           onClick={() => setFilters((f) => ({ ...f, year: "2010s" }))}
         >
           2010s
         </button>
         <button
           type="button"
-          className={filters.year === "2000s" ? "active" : ""}
+          className={chipClass(filters.year === "2000s")}
           onClick={() => setFilters((f) => ({ ...f, year: "2000s" }))}
         >
           2000s
         </button>
         <button
           type="button"
-          className={filters.minRating === 7 ? "active" : ""}
+          className={chipClass(filters.minRating === 7)}
           onClick={() => setFilters((f) => ({ ...f, minRating: f.minRating === 7 ? 0 : 7 }))}
         >
           Rating 7+
         </button>
         <button
           type="button"
-          className={filters.language === "en" ? "active" : ""}
+          className={chipClass(filters.language === "en")}
           onClick={() => setFilters((f) => ({ ...f, language: f.language === "en" ? "all" : "en" }))}
         >
           English
         </button>
         <button
           type="button"
-          className={filters.language === "ja" ? "active" : ""}
+          className={chipClass(filters.language === "ja")}
           onClick={() => setFilters((f) => ({ ...f, language: f.language === "ja" ? "all" : "ja" }))}
         >
           Japanese

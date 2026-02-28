@@ -114,7 +114,7 @@ export default function App() {
   };
 
   return (
-    <div className="app-shell">
+    <div className="min-h-screen">
       {/* Navbar controls page navigation and search input. */}
       <Navbar
         navigate={navigate}

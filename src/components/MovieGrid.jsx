@@ -34,17 +34,17 @@ export default function MovieGrid({
   }, [canLoadMore, safeMovies.length]);
 
   if (!visibleMovies.length) {
-    return <p className="empty-state">{emptyMessage}</p>;
+    return <p className="my-2 text-[var(--muted)]">{emptyMessage}</p>;
   }
 
   return (
     <>
-      <div className="grid">
+      <div className="grid grid-cols-3 gap-3 md:gap-4 lg:[grid-template-columns:repeat(auto-fill,minmax(170px,1fr))]">
         {visibleMovies.map((movie) => (
           <MovieCard key={movie.id} movie={movie} onClick={onSelect} />
         ))}
       </div>
-      {canLoadMore ? <div ref={sentinelRef} className="render-sentinel" aria-hidden="true" /> : null}
+      {canLoadMore ? <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" /> : null}
     </>
   );
 }

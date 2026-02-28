@@ -151,12 +151,12 @@ export default function MovieModal({ movie, onClose }) {
 
   if (error) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal" onClick={(e) => e.stopPropagation()}>
-          <button className="close-btn" onClick={onClose} aria-label="Close details">
+      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
+        <div className="relative max-h-[90vh] w-[min(920px,96vw)] overflow-y-auto rounded-xl border border-white/8 bg-[linear-gradient(160deg,#1d1f24,#121318)] p-4 md:p-6" onClick={(e) => e.stopPropagation()}>
+          <button className="absolute right-3 top-3 h-8 w-8 cursor-pointer rounded-full border-none bg-white/14 text-white" onClick={onClose} aria-label="Close details">
             X
           </button>
-          <p>{error}</p>
+          <p className="my-2 text-sm text-red-400">{error}</p>
         </div>
       </div>
     );
@@ -164,9 +164,9 @@ export default function MovieModal({ movie, onClose }) {
 
   if (!details) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal" onClick={(e) => e.stopPropagation()}>
-          <p className="status-line">Loading details...</p>
+      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
+        <div className="relative max-h-[90vh] w-[min(920px,96vw)] overflow-y-auto rounded-xl border border-white/8 bg-[linear-gradient(160deg,#1d1f24,#121318)] p-4 md:p-6" onClick={(e) => e.stopPropagation()}>
+          <p className="my-2 text-sm text-[var(--muted)]">Loading details...</p>
         </div>
       </div>
     );
@@ -313,40 +313,44 @@ export default function MovieModal({ movie, onClose }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
       <div
-        className="modal"
+        className="relative max-h-[90vh] w-[min(920px,96vw)] overflow-y-auto rounded-xl border border-white/8 bg-[linear-gradient(160deg,#1d1f24,#121318)] p-4 md:p-6"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label={`${title} details`}
         ref={modalRef}
       >
-        <button className="close-btn" onClick={onClose} aria-label="Close details">
+        <button className="absolute right-3 top-3 h-8 w-8 cursor-pointer rounded-full border-none bg-white/14 text-white" onClick={onClose} aria-label="Close details">
           X
         </button>
-        <div className="modal-content">
-          <img src={poster} alt={details.title || "Movie poster"} />
-          <div className="modal-info">
-            <h2>{title}</h2>
-            {details.tagline ? <p className="tagline">{details.tagline}</p> : null}
-            <div className="modal-actions">
-              <button type="button" className="row-more-btn" onClick={onToggleMyList}>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[220px_1fr]">
+          <img
+            src={poster}
+            alt={details.title || "Movie poster"}
+            className="h-auto max-h-[55vh] w-full rounded-lg object-cover md:h-[320px] md:w-[220px]"
+          />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold">{title}</h2>
+            {details.tagline ? <p className="mb-2 italic text-[var(--muted)]">{details.tagline}</p> : null}
+            <div className="my-2 flex flex-wrap items-center gap-2">
+              <button type="button" className="cursor-pointer rounded-full border border-white/20 bg-white/8 px-3 py-1.5 text-sm font-semibold text-[var(--text)] transition hover:bg-white/18" onClick={onToggleMyList}>
                 {saved ? "Remove From My List" : "Add To My List"}
               </button>
-              <button type="button" className="row-more-btn" onClick={onShare}>
+              <button type="button" className="cursor-pointer rounded-full border border-white/20 bg-white/8 px-3 py-1.5 text-sm font-semibold text-[var(--text)] transition hover:bg-white/18" onClick={onShare}>
                 Share
               </button>
-              {shareStatus ? <span className="status-inline">{shareStatus}</span> : null}
+              {shareStatus ? <span className="text-xs text-[var(--muted)]">{shareStatus}</span> : null}
             </div>
-            <p>
+            <p className="leading-relaxed">
               Rating: {rating} | {year} | {runtime}
             </p>
-            <p>{details.overview || "No overview available."}</p>
+            <p className="leading-relaxed">{details.overview || "No overview available."}</p>
             {topCast.length ? (
-              <div className="cast-block">
-                <p className="status-line provider-list">Top Cast</p>
-                <ul>
+              <div className="space-y-1">
+                <p className="my-2 text-sm text-[var(--muted)]">Top Cast</p>
+                <ul className="mb-3 ml-4 text-[var(--muted)]">
                   {topCast.map((person) => (
                     <li key={person.credit_id || person.id}>
                       {person.name} as {person.character || "Unknown"}
@@ -358,7 +362,7 @@ export default function MovieModal({ movie, onClose }) {
             {isPlaybackEnabled ? (
               <button
                 type="button"
-                className="stream-btn"
+                className="mr-2 inline-block cursor-pointer rounded-full border-none bg-[#f2f2f2] px-4 py-2 font-bold text-[#111] transition hover:bg-white disabled:cursor-wait disabled:opacity-70"
                 onClick={onWatchFullMovie}
                 disabled={playbackLoading}
               >
@@ -369,17 +373,17 @@ export default function MovieModal({ movie, onClose }) {
                     : uiLabels.watchFullMovie}
               </button>
             ) : (
-              <p className="status-line">
+              <p className="my-2 text-sm text-[var(--muted)]">
                 Full-movie streaming is disabled. Add a licensed playback API to enable it.
               </p>
             )}
             {playbackError ? (
-              <p className="status-line error" aria-live="polite">
+              <p className="my-2 text-sm text-red-400" aria-live="polite">
                 {playbackError}
               </p>
             ) : null}
-            <p className="status-line provider-list">Licensed providers on Ciniverse:</p>
-            <div className="provider-chips">
+            <p className="my-2 text-sm text-[var(--muted)]">Licensed providers on Ciniverse:</p>
+            <div className="mb-4 mt-1 flex flex-wrap gap-1.5">
               {licensedProviders.map((provider) =>
                 provider.url ? (
                   <a
@@ -387,25 +391,26 @@ export default function MovieModal({ movie, onClose }) {
                     href={provider.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="provider-chip provider-chip--link"
+                    className="rounded-full bg-white/8 px-2 py-1 text-xs text-[var(--text)] no-underline transition hover:bg-white/18"
                   >
                     {provider.name}
                   </a>
                 ) : (
-                  <span key={provider.name} className="provider-chip">
+                  <span key={provider.name} className="rounded-full bg-white/8 px-2 py-1 text-xs text-[var(--text)]">
                     {provider.name}
                   </span>
                 )
               )}
             </div>
             {showFullMovie && hasPlayback ? (
-              <div className="full-player-wrap">
+              <div className="my-3 overflow-hidden rounded-lg border border-white/12 bg-[#0d0f13]">
                 {playback.type === "iframe" ? (
                   <iframe
                     title={`${title} full movie`}
                     src={playback.src}
                     allow="autoplay; encrypted-media; picture-in-picture"
                     allowFullScreen
+                    className="block w-full border-0 [aspect-ratio:16/9]"
                   />
                 ) : (
                   <video
@@ -413,6 +418,7 @@ export default function MovieModal({ movie, onClose }) {
                     poster={playback.poster}
                     onTimeUpdate={onVideoProgress}
                     onLoadedMetadata={onVideoReady}
+                    className="block w-full border-0 [aspect-ratio:16/9]"
                   >
                     <source
                       src={playback.src}
@@ -427,14 +433,14 @@ export default function MovieModal({ movie, onClose }) {
                     Your browser does not support the video tag.
                   </video>
                 )}
-                <p className="license-note">
+                <p className="m-0 px-3 py-2 text-xs text-[var(--muted)]">
                   Source: {playback.provider} ({playback.region})
                 </p>
               </div>
             ) : null}
             <button
               type="button"
-              className="trailer-btn"
+              className="mt-3 inline-block cursor-pointer rounded-full border-none bg-[var(--brand)] px-4 py-2 font-bold text-white transition hover:bg-[var(--brand-dark)]"
               onClick={() => {
                 setShowTrailer((prev) => !prev);
                 trackEvent("toggle_trailer", { id: activeMovie.id, title });
@@ -443,33 +449,35 @@ export default function MovieModal({ movie, onClose }) {
               {showTrailer ? "Hide Trailer" : "Watch Trailer Here"}
             </button>
             {showTrailer ? (
-              <div className="trailer-frame-wrap">
+              <div className="my-3 overflow-hidden rounded-lg border border-white/12">
                 <iframe
                   title={`${title} trailer`}
                   src={trailerSrc}
                   allow="autoplay; encrypted-media; picture-in-picture"
                   allowFullScreen
+                  className="block w-full border-0 [aspect-ratio:16/9]"
                 />
               </div>
             ) : null}
             {similar.length ? (
-              <div className="similar-wrap">
-                <p className="status-line provider-list">Similar Titles</p>
-                <div className="similar-grid">
+              <div className="mt-3">
+                <p className="my-2 text-sm text-[var(--muted)]">Similar Titles</p>
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                   {similar.map((item) => (
                     <button
                       type="button"
                       key={`${item.mediaType}-${item.id}`}
-                      className="similar-card"
+                      className="cursor-pointer overflow-hidden rounded-lg border border-white/12 bg-white/3 text-left text-[var(--text)]"
                       onClick={() => setActiveMovie(item)}
                     >
                       {item.poster_path ? (
                         <img
                           src={`${IMG_BASE}${item.poster_path}`}
                           alt={item.title || item.name || "Similar title"}
+                          className="block w-full object-cover [aspect-ratio:2/3]"
                         />
                       ) : null}
-                      <span>{item.title || item.name || "Untitled"}</span>
+                      <span className="block p-2 text-xs">{item.title || item.name || "Untitled"}</span>
                     </button>
                   ))}
                 </div>

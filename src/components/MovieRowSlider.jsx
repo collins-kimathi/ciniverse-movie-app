@@ -8,7 +8,6 @@ export default function MovieRowSlider({
   emptyMessage = "No movies to show.",
   onTitleClick,
 }) {
-  // Show an initial chunk and reveal more on demand.
   const [visibleCount, setVisibleCount] = useState(12);
   const sentinelRef = useRef(null);
 
@@ -41,17 +40,25 @@ export default function MovieRowSlider({
   }
 
   return (
-    <section className="rail-section">
-      <div className="row-head">
-        <h3>{title}</h3>
-        <div className="row-head-actions">
+    <section className="mb-8">
+      <div className="mb-3 flex flex-col items-start justify-between gap-2 md:flex-row md:items-center md:gap-3">
+        <h3 className="text-xl">{title}</h3>
+        <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:justify-end">
           {onTitleClick ? (
-            <button type="button" className="row-link-btn" onClick={onTitleClick}>
+            <button
+              type="button"
+              className="cursor-pointer rounded-full border border-[rgba(229,9,20,0.4)] bg-[rgba(229,9,20,0.14)] px-3 py-1.5 text-sm font-semibold text-[var(--text)]"
+              onClick={onTitleClick}
+            >
               View All
             </button>
           ) : null}
           {canLoadMore ? (
-            <button type="button" className="row-more-btn" onClick={loadMore}>
+            <button
+              type="button"
+              className="cursor-pointer rounded-full border border-white/20 bg-white/8 px-3 py-1.5 text-sm font-semibold text-[var(--text)] transition hover:bg-white/18"
+              onClick={loadMore}
+            >
               More Movies
             </button>
           ) : null}
@@ -59,15 +66,15 @@ export default function MovieRowSlider({
       </div>
 
       {!visibleMovies.length ? (
-        <p className="empty-state">{emptyMessage}</p>
+        <p className="my-2 text-[var(--muted)]">{emptyMessage}</p>
       ) : (
-        <div className="row-slider-grid">
+        <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-6">
           {visibleMovies.map((movie) => (
             <MovieCard key={movie.id} movie={movie} onClick={onSelect} />
           ))}
         </div>
       )}
-      {canLoadMore ? <div ref={sentinelRef} className="render-sentinel" aria-hidden="true" /> : null}
+      {canLoadMore ? <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" /> : null}
     </section>
   );
 }
