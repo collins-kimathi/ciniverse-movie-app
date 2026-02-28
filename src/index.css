@@ -931,9 +931,10 @@ body {
 @media (max-width: 640px) {
   .navbar {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      "logo search"
+      "logo"
+      "search"
       "links links";
     row-gap: 0.5rem;
     column-gap: 0.5rem;
@@ -1072,9 +1073,10 @@ body {
   .search-form {
     grid-area: search;
     order: initial;
-    width: auto;
+    width: 100%;
     margin: 0;
-    justify-self: end;
+    justify-self: stretch;
+    justify-content: flex-end;
   }
 
   .search-form-fields {
@@ -1122,6 +1124,10 @@ body {
   .navbar {
     padding: 0.62rem max(0.62rem, env(safe-area-inset-right))
       0.55rem max(0.62rem, env(safe-area-inset-left));
+    grid-template-areas:
+      "logo"
+      "search"
+      "links links";
   }
 
   .search-form input {
