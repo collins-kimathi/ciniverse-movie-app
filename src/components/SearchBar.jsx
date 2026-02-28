@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { pushRecentSearch, readRecentSearches } from "../utils/library";
 import { trackEvent } from "../utils/analytics";
 
@@ -7,6 +7,7 @@ export default function SearchBar({ onSearch }) {
   const [focused, setFocused] = useState(false);
   const [recent, setRecent] = useState([]);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     setRecent(readRecentSearches());
@@ -28,6 +29,15 @@ export default function SearchBar({ onSearch }) {
     return () => window.clearTimeout(timeout);
   }, [query, onSearch]);
 
+  useEffect(() => {
+    if (!mobileOpen) {
+      return;
+    }
+    window.setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+  }, [mobileOpen]);
+
   const filteredRecent = useMemo(
     () =>
       recent.filter((item) =>
@@ -45,6 +55,8 @@ export default function SearchBar({ onSearch }) {
       setRecent(readRecentSearches());
       trackEvent("search_submit", { query: clean });
     }
+    setFocused(false);
+    setMobileOpen(false);
   }
 
   function chooseRecent(value) {
@@ -68,10 +80,11 @@ export default function SearchBar({ onSearch }) {
         aria-label={mobileOpen ? "Close search" : "Open search"}
         onClick={() => setMobileOpen((prev) => !prev)}
       >
-        <span aria-hidden="true">🔍</span>
+        <span aria-hidden="true">Find</span>
       </button>
       <div className="search-form-fields">
         <input
+          ref={inputRef}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setFocused(true)}
