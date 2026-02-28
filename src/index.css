@@ -494,14 +494,6 @@ body {
   font-size: 0.8rem;
 }
 
-.provider-chip--link {
-  text-decoration: none;
-}
-
-.provider-chip--link:hover {
-  background: rgba(255, 255, 255, 0.18);
-}
-
 @keyframes skeletonShimmer {
   0% {
     background-position: 100% 0;
