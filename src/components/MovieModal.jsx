@@ -1,36 +1,62 @@
 import { useEffect, useState } from "react";
-import { fetchMovieDetails, fetchShowDetails, IMG_BASE } from "../api/tmdb";
+import {
+  fetchMovieDetails,
+  fetchShowDetails,
+  fetchSimilarMovies,
+  fetchSimilarShows,
+  IMG_BASE,
+} from "../api/tmdb";
 import { fetchLicensedPlaybackSession, isPlaybackEnabled } from "../api/playback";
 import { licensedProviders } from "../config/licensedProviders";
+import { isInMyList, toggleMyList, upsertContinueWatching } from "../utils/library";
 
 export default function MovieModal({ movie, onClose }) {
+  const [activeMovie, setActiveMovie] = useState(movie);
   const [details, setDetails] = useState(null);
+  const [similar, setSimilar] = useState([]);
   const [showTrailer, setShowTrailer] = useState(false);
   const [showFullMovie, setShowFullMovie] = useState(false);
   const [playback, setPlayback] = useState(null);
   const [playbackLoading, setPlaybackLoading] = useState(false);
   const [playbackError, setPlaybackError] = useState("");
   const [error, setError] = useState("");
-  const isShow = movie.mediaType === "tv";
+  const [saved, setSaved] = useState(isInMyList(movie.id));
+  const [shareStatus, setShareStatus] = useState("");
+
+  const isShow = activeMovie.mediaType === "tv";
+
+  useEffect(() => {
+    setActiveMovie(movie);
+    setSaved(isInMyList(movie.id));
+  }, [movie]);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadDetails() {
       setDetails(null);
+      setSimilar([]);
       setShowTrailer(false);
       setShowFullMovie(false);
       setPlayback(null);
       setPlaybackLoading(false);
       setPlaybackError("");
       setError("");
+      setShareStatus("");
 
       try {
-        const data = isShow
-          ? await fetchShowDetails(movie.id)
-          : await fetchMovieDetails(movie.id);
+        const [data, similarData] = await Promise.all([
+          isShow ? fetchShowDetails(activeMovie.id) : fetchMovieDetails(activeMovie.id),
+          isShow ? fetchSimilarShows(activeMovie.id) : fetchSimilarMovies(activeMovie.id),
+        ]);
+
         if (!cancelled) {
           setDetails(data);
+          setSimilar(
+            (similarData?.results || [])
+              .slice(0, 8)
+              .map((item) => ({ ...item, mediaType: isShow ? "tv" : "movie" }))
+          );
         }
       } catch {
         if (!cancelled) {
@@ -44,10 +70,9 @@ export default function MovieModal({ movie, onClose }) {
     return () => {
       cancelled = true;
     };
-  }, [movie.id, isShow]);
+  }, [activeMovie.id, isShow]);
 
   useEffect(() => {
-    // Let users dismiss the modal with Escape.
     function onKeyDown(event) {
       if (event.key === "Escape") {
         onClose();
@@ -57,6 +82,21 @@ export default function MovieModal({ movie, onClose }) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
+
+  useEffect(() => {
+    if (!details) {
+      return;
+    }
+    const title = details.title || details.name || "Untitled";
+    upsertContinueWatching({
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      title,
+      poster_path: details.poster_path || "",
+      release_date: details.release_date || details.first_air_date || "",
+      resumeSeconds: playback?.src ? 0 : undefined,
+    });
+  }, [activeMovie.id, activeMovie.mediaType, details, playback?.src]);
 
   if (error) {
     return (
@@ -99,6 +139,7 @@ export default function MovieModal({ movie, onClose }) {
       ? `${details.runtime} min`
       : "Unknown runtime";
   const hasPlayback = Boolean(playback?.src);
+  const topCast = (details.credits?.cast || []).slice(0, 5);
 
   async function onWatchFullMovie() {
     if (showFullMovie && hasPlayback) {
@@ -115,10 +156,18 @@ export default function MovieModal({ movie, onClose }) {
     setPlaybackError("");
 
     try {
-      const stream = await fetchLicensedPlaybackSession(movie.id);
+      const stream = await fetchLicensedPlaybackSession(activeMovie.id);
       if (stream) {
         setPlayback(stream);
         setShowFullMovie(true);
+        upsertContinueWatching({
+          id: activeMovie.id,
+          mediaType: activeMovie.mediaType || "movie",
+          title,
+          poster_path: details.poster_path || "",
+          release_date: details.release_date || details.first_air_date || "",
+          resumeSeconds: 0,
+        });
       } else {
         setPlaybackError(
           "No licensed full-movie stream is available for this title in your region."
@@ -129,6 +178,55 @@ export default function MovieModal({ movie, onClose }) {
     } finally {
       setPlaybackLoading(false);
     }
+  }
+
+  function onToggleMyList() {
+    const next = toggleMyList({
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      title,
+      name: details.name || "",
+      poster_path: details.poster_path || "",
+      release_date: details.release_date || details.first_air_date || "",
+      first_air_date: details.first_air_date || "",
+      vote_average: details.vote_average || 0,
+    });
+    setSaved(next);
+  }
+
+  async function onShare() {
+    const shareUrl = `${window.location.origin}/?watch=${activeMovie.id}`;
+    const payload = {
+      title: `${title} on Ciniverse`,
+      text: `Check out ${title} on Ciniverse`,
+      url: shareUrl,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(payload);
+        setShareStatus("Shared");
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+      setShareStatus("Link copied");
+    } catch {
+      setShareStatus("Share failed");
+    }
+  }
+
+  function onVideoProgress(event) {
+    const resumeSeconds = Math.floor(event.currentTarget.currentTime || 0);
+    if (resumeSeconds % 5 !== 0) {
+      return;
+    }
+    upsertContinueWatching({
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      title,
+      poster_path: details.poster_path || "",
+      release_date: details.release_date || details.first_air_date || "",
+      resumeSeconds,
+    });
   }
 
   return (
@@ -142,10 +240,31 @@ export default function MovieModal({ movie, onClose }) {
           <div className="modal-info">
             <h2>{title}</h2>
             {details.tagline ? <p className="tagline">{details.tagline}</p> : null}
+            <div className="modal-actions">
+              <button type="button" className="row-more-btn" onClick={onToggleMyList}>
+                {saved ? "Remove From My List" : "Add To My List"}
+              </button>
+              <button type="button" className="row-more-btn" onClick={onShare}>
+                Share
+              </button>
+              {shareStatus ? <span className="status-inline">{shareStatus}</span> : null}
+            </div>
             <p>
               Rating: {rating} | {year} | {runtime}
             </p>
             <p>{details.overview || "No overview available."}</p>
+            {topCast.length ? (
+              <div className="cast-block">
+                <p className="status-line provider-list">Top Cast</p>
+                <ul>
+                  {topCast.map((person) => (
+                    <li key={person.credit_id || person.id}>
+                      {person.name} as {person.character || "Unknown"}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {isPlaybackEnabled ? (
               <button
                 type="button"
@@ -165,9 +284,7 @@ export default function MovieModal({ movie, onClose }) {
               </p>
             )}
             {playbackError ? <p className="status-line error">{playbackError}</p> : null}
-            <p className="status-line provider-list">
-              Licensed providers on Ciniverse:
-            </p>
+            <p className="status-line provider-list">Licensed providers on Ciniverse:</p>
             <div className="provider-chips">
               {licensedProviders.map((provider) =>
                 provider.url ? (
@@ -197,7 +314,7 @@ export default function MovieModal({ movie, onClose }) {
                     allowFullScreen
                   />
                 ) : (
-                  <video controls poster={playback.poster}>
+                  <video controls poster={playback.poster} onTimeUpdate={onVideoProgress}>
                     <source
                       src={playback.src}
                       type={
@@ -233,6 +350,29 @@ export default function MovieModal({ movie, onClose }) {
                   allow="autoplay; encrypted-media; picture-in-picture"
                   allowFullScreen
                 />
+              </div>
+            ) : null}
+            {similar.length ? (
+              <div className="similar-wrap">
+                <p className="status-line provider-list">Similar Titles</p>
+                <div className="similar-grid">
+                  {similar.map((item) => (
+                    <button
+                      type="button"
+                      key={`${item.mediaType}-${item.id}`}
+                      className="similar-card"
+                      onClick={() => setActiveMovie(item)}
+                    >
+                      {item.poster_path ? (
+                        <img
+                          src={`${IMG_BASE}${item.poster_path}`}
+                          alt={item.title || item.name || "Similar title"}
+                        />
+                      ) : null}
+                      <span>{item.title || item.name || "Untitled"}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : null}
           </div>

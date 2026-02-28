@@ -3,13 +3,14 @@ import { searchMovies } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";
 import MovieModal from "../components/MovieModal";
 import SkeletonGrid from "../components/SkeletonGrid";
+import SectionError from "../components/SectionError";
 import useMovies from "../hooks/useMovies";
 
 export default function Search({ query }) {
   const [selected, setSelected] = useState(null);
   const cleanQuery = useMemo(() => query.trim(), [query]);
 
-  const { movies: results, loading, error } = useMovies(
+  const { movies: results, loading, error, retry } = useMovies(
     async () => {
       const data = await searchMovies(cleanQuery);
       return data.results || [];
@@ -26,7 +27,7 @@ export default function Search({ query }) {
       <section className="rail-section">
         <h3>Results for "{query}"</h3>
         {loading ? <SkeletonGrid count={12} /> : null}
-        {error ? <p className="status-line error">{error}</p> : null}
+        {error ? <SectionError message={error} onRetry={retry} /> : null}
         {!loading && !error ? (
           <MovieGrid movies={results} onSelect={setSelected} emptyMessage="No movies matched your search." />
         ) : null}

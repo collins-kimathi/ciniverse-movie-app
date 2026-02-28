@@ -6,6 +6,7 @@ export default function MovieRowSlider({
   movies = [],
   onSelect = () => {},
   emptyMessage = "No movies to show.",
+  onTitleClick,
 }) {
   // Show an initial chunk and reveal more on demand.
   const [visibleCount, setVisibleCount] = useState(12);
@@ -22,11 +23,18 @@ export default function MovieRowSlider({
     <section className="rail-section">
       <div className="row-head">
         <h3>{title}</h3>
-        {canLoadMore ? (
-          <button type="button" className="row-more-btn" onClick={loadMore}>
-            More Movies
-          </button>
-        ) : null}
+        <div className="row-head-actions">
+          {onTitleClick ? (
+            <button type="button" className="row-link-btn" onClick={onTitleClick}>
+              View All
+            </button>
+          ) : null}
+          {canLoadMore ? (
+            <button type="button" className="row-more-btn" onClick={loadMore}>
+              More Movies
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {!visibleMovies.length ? (

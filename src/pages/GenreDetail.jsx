@@ -1,54 +1,50 @@
 import { useState } from "react";
-import { fetchPopularShows } from "../api/tmdb";
+import { fetchByGenre } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";
 import MovieModal from "../components/MovieModal";
 import SkeletonGrid from "../components/SkeletonGrid";
-import SectionError from "../components/SectionError";
 import useMovies from "../hooks/useMovies";
+import SectionError from "../components/SectionError";
 
-export default function Shows() {
+export default function GenreDetail({ genreTitle, genreId }) {
   const [selected, setSelected] = useState(null);
   const [page, setPage] = useState(1);
   const { movies, loading, error, retry } = useMovies(
     async () => {
       const requests = Array.from({ length: page }, (_, index) =>
-        fetchPopularShows(index + 1)
+        fetchByGenre(genreId, index + 1)
       );
       const results = await Promise.all(requests);
-      const uniqueById = new Map();
-
+      const byId = new Map();
       results.forEach((data) => {
-        (data.results || []).forEach((show) => {
-          if (show?.id && !uniqueById.has(show.id)) {
-            uniqueById.set(show.id, { ...show, mediaType: "tv" });
+        (data.results || []).forEach((movie) => {
+          if (movie?.id && !byId.has(movie.id)) {
+            byId.set(movie.id, movie);
           }
         });
       });
-
-      return Array.from(uniqueById.values());
+      return Array.from(byId.values());
     },
-    [page],
-    { errorMessage: "Could not load shows." }
+    [genreId, page],
+    { errorMessage: `Could not load ${genreTitle}.` }
   );
 
   return (
     <main className="main">
       <section className="rail-section">
-        <h3>Popular Shows</h3>
+        <h3>{genreTitle}</h3>
         {loading ? <SkeletonGrid count={12} /> : null}
         {error ? <SectionError message={error} onRetry={retry} /> : null}
         {!loading && !error ? (
-          <MovieGrid movies={movies} onSelect={setSelected} emptyMessage="No shows found." />
+          <MovieGrid movies={movies} onSelect={setSelected} emptyMessage={`No ${genreTitle} found.`} />
         ) : null}
         <div className="popular-actions">
           <button
             type="button"
             className="row-more-btn"
             onClick={() => setPage((current) => current + 1)}
-            aria-label="Load more shows"
-            title="Load more shows"
           >
-            More Shows +
+            More {genreTitle}
           </button>
         </div>
       </section>

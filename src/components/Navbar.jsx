@@ -1,6 +1,13 @@
 import SearchBar from "./SearchBar";
+import InstallButton from "./InstallButton";
 
-export default function Navbar({ navigate, onSearch, activePage }) {
+export default function Navbar({
+  navigate,
+  onSearch,
+  activePage,
+  canInstall = false,
+  onInstall = () => {},
+}) {
   return (
     <nav className="navbar">
       <button type="button" className="logo" onClick={() => navigate("home")}>
@@ -35,7 +42,15 @@ export default function Navbar({ navigate, onSearch, activePage }) {
         >
           Anime
         </button>
+        <button
+          type="button"
+          className={activePage === "my-list" ? "active" : ""}
+          onClick={() => navigate("my-list")}
+        >
+          My List
+        </button>
       </div>
+      <InstallButton canInstall={canInstall} onInstall={onInstall} />
       <SearchBar onSearch={onSearch} />
     </nav>
   );

@@ -3,12 +3,13 @@ import { fetchAnime } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";
 import MovieModal from "../components/MovieModal";
 import SkeletonGrid from "../components/SkeletonGrid";
+import SectionError from "../components/SectionError";
 import useMovies from "../hooks/useMovies";
 
 export default function Anime() {
   const [selected, setSelected] = useState(null);
   const [page, setPage] = useState(1);
-  const { movies, loading, error } = useMovies(
+  const { movies, loading, error, retry } = useMovies(
     async () => {
       const requests = Array.from({ length: page }, (_, index) =>
         fetchAnime(index + 1)
@@ -35,7 +36,7 @@ export default function Anime() {
       <section className="rail-section">
         <h3>Anime Movies</h3>
         {loading ? <SkeletonGrid count={12} /> : null}
-        {error ? <p className="status-line error">{error}</p> : null}
+        {error ? <SectionError message={error} onRetry={retry} /> : null}
         {!loading && !error ? (
           <MovieGrid movies={movies} onSelect={setSelected} emptyMessage="No anime movies found." />
         ) : null}

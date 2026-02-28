@@ -60,6 +60,20 @@ body {
   margin-right: auto;
 }
 
+.install-btn {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.install-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .nav-links button {
   background: transparent;
   border: 1px solid transparent;
@@ -245,6 +259,22 @@ body {
   margin-bottom: 0.75rem;
 }
 
+.row-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.row-link-btn {
+  border: 1px solid rgba(229, 9, 20, 0.4);
+  background: rgba(229, 9, 20, 0.14);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
 .row-more-btn {
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.08);
@@ -286,6 +316,27 @@ body {
   overflow: hidden;
   background: var(--panel);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.availability-badge {
+  position: absolute;
+  top: 0.45rem;
+  left: 0.45rem;
+  z-index: 2;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.availability-badge.yes {
+  background: rgba(29, 185, 84, 0.9);
+}
+
+.availability-badge.no {
+  background: rgba(176, 6, 16, 0.9);
 }
 
 .card:hover {
@@ -352,6 +403,18 @@ body {
   margin: 0.55rem 0 1.1rem;
 }
 
+.status-inline {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.section-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
 .status-line.error {
   color: #ff7474;
 }
@@ -406,6 +469,13 @@ body {
 
 .modal-info h2 {
   margin-bottom: 0.45rem;
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.4rem 0 0.8rem;
 }
 
 .tagline {
@@ -526,6 +596,65 @@ body {
   background: rgba(255, 255, 255, 0.18);
 }
 
+.cast-block ul {
+  margin: 0 0 0.8rem 1.1rem;
+  color: var(--muted);
+}
+
+.similar-wrap {
+  margin-top: 0.8rem;
+}
+
+.similar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.similar-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: left;
+  cursor: pointer;
+}
+
+.similar-card img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.similar-card span {
+  display: block;
+  font-size: 0.75rem;
+  padding: 0.45rem;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0 0 1.1rem;
+}
+
+.filter-chips button {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+.filter-chips button.active {
+  border-color: rgba(229, 9, 20, 0.5);
+  background: rgba(229, 9, 20, 0.2);
+}
+
 @keyframes skeletonShimmer {
   0% {
     background-position: 100% 0;
@@ -577,6 +706,10 @@ body {
   .modal-content img {
     width: 100%;
     height: auto;
+  }
+
+  .similar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

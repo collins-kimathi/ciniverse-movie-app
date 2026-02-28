@@ -5,6 +5,7 @@ export default function useMovies(loader, deps = [], options = {}) {
   const [movies, setMovies] = useState(initialData);
   const [loading, setLoading] = useState(Boolean(enabled));
   const [error, setError] = useState("");
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,7 +43,7 @@ export default function useMovies(loader, deps = [], options = {}) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, ...deps]);
+  }, [enabled, reloadTick, ...deps]);
 
-  return { movies, loading, error, setMovies };
+  return { movies, loading, error, setMovies, retry: () => setReloadTick((v) => v + 1) };
 }

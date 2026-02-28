@@ -4,6 +4,9 @@ import HeroFeatured from "../components/HeroFeatured";
 import MovieRowSlider from "../components/MovieRowSlider";
 import MovieModal from "../components/MovieModal";
 import SkeletonRow from "../components/SkeletonRow";
+import SectionError from "../components/SectionError";
+import useMovies from "../hooks/useMovies";
+import { readContinueWatching } from "../utils/library";
 
 const GENRE_SECTIONS = [
   { key: "action", title: "Action Hits", genreId: 28, emptyMessage: "No action movies found." },
@@ -36,91 +39,130 @@ const GENRE_SECTIONS = [
   },
 ];
 
-export default function Home() {
-  // Featured hero switches to the next movie on this cadence.
+function mergeUnique(...lists) {
+  const byId = new Map();
+  lists.flat().forEach((movie) => {
+    if (movie?.id && !byId.has(movie.id)) {
+      byId.set(movie.id, movie);
+    }
+  });
+  return Array.from(byId.values());
+}
+
+function applyFilters(movies, filters) {
+  return movies.filter((movie) => {
+    const release = movie.release_date || movie.first_air_date || "";
+    const year = Number(release.slice(0, 4));
+    const rating = Number(movie.vote_average || 0);
+    const lang = (movie.original_language || "").toLowerCase();
+
+    if (filters.year === "2020s" && (!year || year < 2020)) {
+      return false;
+    }
+    if (filters.year === "2010s" && (!year || year < 2010 || year > 2019)) {
+      return false;
+    }
+    if (filters.year === "2000s" && (!year || year < 2000 || year > 2009)) {
+      return false;
+    }
+    if (rating < filters.minRating) {
+      return false;
+    }
+    if (filters.language !== "all" && lang !== filters.language) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function GenreRail({ section, filters, onSelect, onOpenGenre }) {
+  const { movies, loading, error, retry } = useMovies(
+    async () => {
+      const data = await fetchByGenre(section.genreId, 1);
+      return data.results || [];
+    },
+    [section.genreId],
+    { errorMessage: `Could not load ${section.title}.` }
+  );
+
+  const filtered = useMemo(() => applyFilters(movies, filters), [movies, filters]);
+
+  if (loading) {
+    return <SkeletonRow title={section.title} />;
+  }
+
+  if (error) {
+    return <SectionError message={error} onRetry={retry} />;
+  }
+
+  return (
+    <MovieRowSlider
+      title={section.title}
+      movies={filtered}
+      onSelect={onSelect}
+      emptyMessage={section.emptyMessage}
+      onTitleClick={() => onOpenGenre(section)}
+    />
+  );
+}
+
+export default function Home({ onOpenGenre = () => {} }) {
   const HERO_ROTATE_MS = 8000;
-  const [trending, setTrending] = useState([]);
-  const [topRated, setTopRated] = useState([]);
-  const [genreRows, setGenreRows] = useState({});
   const [selected, setSelected] = useState(null);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroTick, setHeroTick] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [continueWatching, setContinueWatching] = useState([]);
+  const [filters, setFilters] = useState({
+    year: "all",
+    minRating: 0,
+    language: "all",
+  });
+
+  const {
+    movies: trending,
+    loading: trendingLoading,
+    error: trendingError,
+    retry: retryTrending,
+  } = useMovies(
+    async () => {
+      const [page1, page2] = await Promise.all([fetchTrending(1), fetchTrending(2)]);
+      return mergeUnique(page1.results || [], page2.results || []);
+    },
+    [],
+    { errorMessage: "Could not load trending movies." }
+  );
+
+  const {
+    movies: topRated,
+    loading: topRatedLoading,
+    error: topRatedError,
+    retry: retryTopRated,
+  } = useMovies(
+    async () => {
+      const [page1, page2] = await Promise.all([fetchTopRated(1), fetchTopRated(2)]);
+      return mergeUnique(page1.results || [], page2.results || []);
+    },
+    [],
+    { errorMessage: "Could not load top rated movies." }
+  );
 
   useEffect(() => {
-    let cancelled = false;
+    setContinueWatching(readContinueWatching());
+  }, [selected]);
 
-    async function loadHome() {
-      setLoading(true);
-      setError("");
-
-      try {
-        const [
-          trendingPage1,
-          trendingPage2,
-          topRatedPage1,
-          topRatedPage2,
-          ...genrePages
-        ] = await Promise.all([
-          fetchTrending(1),
-          fetchTrending(2),
-          fetchTopRated(1),
-          fetchTopRated(2),
-          ...GENRE_SECTIONS.map((section) => fetchByGenre(section.genreId, 1)),
-        ]);
-
-        if (!cancelled) {
-          // Merge multiple pages and remove duplicate movie IDs.
-          const mergeUnique = (...lists) => {
-            const byId = new Map();
-            lists.flat().forEach((movie) => {
-              if (movie?.id && !byId.has(movie.id)) {
-                byId.set(movie.id, movie);
-              }
-            });
-            return Array.from(byId.values());
-          };
-
-          setTrending(
-            mergeUnique(trendingPage1.results || [], trendingPage2.results || [])
-          );
-          setTopRated(
-            mergeUnique(topRatedPage1.results || [], topRatedPage2.results || [])
-          );
-          const nextGenreRows = {};
-          GENRE_SECTIONS.forEach((section, index) => {
-            nextGenreRows[section.key] = mergeUnique(genrePages[index]?.results || []);
-          });
-          setGenreRows(nextGenreRows);
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Could not load movies. Please check your API key or network.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadHome();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const filteredTrending = useMemo(() => applyFilters(trending, filters), [trending, filters]);
+  const filteredTopRated = useMemo(() => applyFilters(topRated, filters), [topRated, filters]);
 
   const topTwentyMovies = useMemo(() => {
     const byId = new Map();
-    [...trending, ...topRated].forEach((movie) => {
+    [...filteredTrending, ...filteredTopRated].forEach((movie) => {
       if (movie?.id && !byId.has(movie.id)) {
         byId.set(movie.id, movie);
       }
     });
     return Array.from(byId.values()).slice(0, 20);
-  }, [trending, topRated]);
+  }, [filteredTrending, filteredTopRated]);
 
   useEffect(() => {
     if (topTwentyMovies.length <= 1) {
@@ -129,7 +171,6 @@ export default function Home() {
       return;
     }
 
-    // Advance the hero movie on a timer and restart progress animation.
     setHeroTick((value) => value + 1);
     const interval = window.setInterval(() => {
       setActiveHeroIndex((current) => (current + 1) % topTwentyMovies.length);
@@ -140,9 +181,10 @@ export default function Home() {
   }, [topTwentyMovies, HERO_ROTATE_MS]);
 
   const heroMovie = useMemo(
-    () => topTwentyMovies[activeHeroIndex] || trending[0] || topRated[0],
-    [activeHeroIndex, topTwentyMovies, trending, topRated]
+    () => topTwentyMovies[activeHeroIndex] || filteredTrending[0] || filteredTopRated[0],
+    [activeHeroIndex, topTwentyMovies, filteredTrending, filteredTopRated]
   );
+
   return (
     <main className="main">
       <HeroFeatured
@@ -152,47 +194,98 @@ export default function Home() {
         tick={heroTick}
       />
 
-      {loading ? (
-        <>
-          <SkeletonRow title="Trending This Week" />
-          <SkeletonRow title="Top Rated" />
-          <SkeletonRow title="Action Hits" />
-          <SkeletonRow title="Comedy Picks" />
-          <SkeletonRow title="Drama Stories" />
-          <SkeletonRow title="Thriller Zone" />
-          <SkeletonRow title="Horror Nights" />
-          <SkeletonRow title="Sci-Fi Worlds" />
-          <SkeletonRow title="Romance Picks" />
-          <SkeletonRow title="Animation Spotlight" />
-        </>
-      ) : null}
-      {error ? <p className="status-line error">{error}</p> : null}
+      <section className="filter-chips" aria-label="Home filters">
+        <button
+          type="button"
+          className={filters.year === "all" ? "active" : ""}
+          onClick={() => setFilters((f) => ({ ...f, year: "all" }))}
+        >
+          Any Year
+        </button>
+        <button
+          type="button"
+          className={filters.year === "2020s" ? "active" : ""}
+          onClick={() => setFilters((f) => ({ ...f, year: "2020s" }))}
+        >
+          2020s
+        </button>
+        <button
+          type="button"
+          className={filters.year === "2010s" ? "active" : ""}
+          onClick={() => setFilters((f) => ({ ...f, year: "2010s" }))}
+        >
+          2010s
+        </button>
+        <button
+          type="button"
+          className={filters.year === "2000s" ? "active" : ""}
+          onClick={() => setFilters((f) => ({ ...f, year: "2000s" }))}
+        >
+          2000s
+        </button>
+        <button
+          type="button"
+          className={filters.minRating === 7 ? "active" : ""}
+          onClick={() => setFilters((f) => ({ ...f, minRating: f.minRating === 7 ? 0 : 7 }))}
+        >
+          Rating 7+
+        </button>
+        <button
+          type="button"
+          className={filters.language === "en" ? "active" : ""}
+          onClick={() => setFilters((f) => ({ ...f, language: f.language === "en" ? "all" : "en" }))}
+        >
+          English
+        </button>
+        <button
+          type="button"
+          className={filters.language === "ja" ? "active" : ""}
+          onClick={() => setFilters((f) => ({ ...f, language: f.language === "ja" ? "all" : "ja" }))}
+        >
+          Japanese
+        </button>
+      </section>
 
-      {!loading && !error ? (
-        <>
-          <MovieRowSlider
-            title="Trending This Week"
-            movies={trending}
-            onSelect={setSelected}
-            emptyMessage="No trending movies found."
-          />
-          <MovieRowSlider
-            title="Top Rated"
-            movies={topRated}
-            onSelect={setSelected}
-            emptyMessage="No top rated movies found."
-          />
-          {GENRE_SECTIONS.map((section) => (
-            <MovieRowSlider
-              key={section.key}
-              title={section.title}
-              movies={genreRows[section.key] || []}
-              onSelect={setSelected}
-              emptyMessage={section.emptyMessage}
-            />
-          ))}
-        </>
+      {continueWatching.length ? (
+        <MovieRowSlider
+          title="Continue Watching"
+          movies={continueWatching}
+          onSelect={setSelected}
+          emptyMessage=""
+        />
       ) : null}
+
+      {trendingLoading ? <SkeletonRow title="Trending This Week" /> : null}
+      {trendingError ? <SectionError message={trendingError} onRetry={retryTrending} /> : null}
+      {!trendingLoading && !trendingError ? (
+        <MovieRowSlider
+          title="Trending This Week"
+          movies={filteredTrending}
+          onSelect={setSelected}
+          emptyMessage="No trending movies found."
+        />
+      ) : null}
+
+      {topRatedLoading ? <SkeletonRow title="Top Rated" /> : null}
+      {topRatedError ? <SectionError message={topRatedError} onRetry={retryTopRated} /> : null}
+      {!topRatedLoading && !topRatedError ? (
+        <MovieRowSlider
+          title="Top Rated"
+          movies={filteredTopRated}
+          onSelect={setSelected}
+          emptyMessage="No top rated movies found."
+        />
+      ) : null}
+
+      {GENRE_SECTIONS.map((section) => (
+        <GenreRail
+          key={section.key}
+          section={section}
+          filters={filters}
+          onSelect={setSelected}
+          onOpenGenre={onOpenGenre}
+        />
+      ))}
 
       {selected ? <MovieModal movie={selected} onClose={() => setSelected(null)} /> : null}
     </main>
