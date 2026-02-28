@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchByGenre } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";
 import MovieModal from "../components/MovieModal";
@@ -6,7 +6,7 @@ import SkeletonGrid from "../components/SkeletonGrid";
 import useMovies from "../hooks/useMovies";
 import SectionError from "../components/SectionError";
 
-export default function GenreDetail({ genreTitle, genreId }) {
+export default function GenreDetail({ genreTitle, genreId, watchTarget = null, onConsumeWatchTarget = () => {} }) {
   const [selected, setSelected] = useState(null);
   const [page, setPage] = useState(1);
   const { movies, loading, error, retry } = useMovies(
@@ -28,6 +28,14 @@ export default function GenreDetail({ genreTitle, genreId }) {
     [genreId, page],
     { errorMessage: `Could not load ${genreTitle}.` }
   );
+
+  useEffect(() => {
+    if (!watchTarget) {
+      return;
+    }
+    setSelected({ id: watchTarget.id, mediaType: watchTarget.mediaType });
+    onConsumeWatchTarget();
+  }, [watchTarget, onConsumeWatchTarget]);
 
   return (
     <main className="main">

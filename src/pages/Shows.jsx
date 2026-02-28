@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchPopularShows } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";
 import MovieModal from "../components/MovieModal";
@@ -6,7 +6,7 @@ import SkeletonGrid from "../components/SkeletonGrid";
 import SectionError from "../components/SectionError";
 import useMovies from "../hooks/useMovies";
 
-export default function Shows() {
+export default function Shows({ watchTarget = null, onConsumeWatchTarget = () => {} }) {
   const [selected, setSelected] = useState(null);
   const [page, setPage] = useState(1);
   const { movies, loading, error, retry } = useMovies(
@@ -30,6 +30,14 @@ export default function Shows() {
     [page],
     { errorMessage: "Could not load shows." }
   );
+
+  useEffect(() => {
+    if (!watchTarget) {
+      return;
+    }
+    setSelected({ id: watchTarget.id, mediaType: watchTarget.mediaType || "tv" });
+    onConsumeWatchTarget();
+  }, [watchTarget, onConsumeWatchTarget]);
 
   return (
     <main className="main">

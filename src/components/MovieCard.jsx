@@ -13,6 +13,11 @@ export default function MovieCard({ movie, onClick }) {
   const year = (movie.release_date || movie.first_air_date)?.slice(0, 4) || "Unknown";
   const title = movie.title || movie.name || "Untitled";
   const [licensed, setLicensed] = useState(availabilityCache.get(movie.id));
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [movie.id, movie.poster_path]);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,7 +60,13 @@ export default function MovieCard({ movie, onClick }) {
           {licensed ? "Licensed" : "Not Licensed"}
         </span>
       ) : null}
-      <img src={poster} alt={title} loading="lazy" />
+      <img
+        src={poster}
+        alt={title}
+        loading="lazy"
+        className={imageLoaded ? "loaded" : "loading"}
+        onLoad={() => setImageLoaded(true)}
+      />
       <div className="card-info">
         <h3>{title}</h3>
         <span>Rating: {rating}</span>

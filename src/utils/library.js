@@ -1,5 +1,6 @@
 const MY_LIST_KEY = "ciniverse.my_list";
 const CONTINUE_WATCHING_KEY = "ciniverse.continue_watching";
+const RECENT_SEARCHES_KEY = "ciniverse.recent_searches";
 
 function readJson(key, fallback) {
   try {
@@ -53,4 +54,27 @@ export function upsertContinueWatching(entry) {
     ),
   ].slice(0, 120);
   writeJson(CONTINUE_WATCHING_KEY, next);
+}
+
+export function getContinueWatchingEntry(id, mediaType = "movie") {
+  return readContinueWatching().find(
+    (item) => item.id === id && (item.mediaType || "movie") === mediaType
+  );
+}
+
+export function readRecentSearches() {
+  return readJson(RECENT_SEARCHES_KEY, []);
+}
+
+export function pushRecentSearch(query) {
+  const clean = (query || "").trim();
+  if (!clean) {
+    return;
+  }
+  const list = readRecentSearches();
+  const next = [clean, ...list.filter((item) => item.toLowerCase() !== clean.toLowerCase())].slice(
+    0,
+    8
+  );
+  writeJson(RECENT_SEARCHES_KEY, next);
 }

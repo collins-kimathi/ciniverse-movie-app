@@ -3,13 +3,21 @@ import MovieGrid from "../components/MovieGrid";
 import MovieModal from "../components/MovieModal";
 import { readMyList } from "../utils/library";
 
-export default function MyList() {
+export default function MyList({ watchTarget = null, onConsumeWatchTarget = () => {} }) {
   const [list, setList] = useState([]);
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     setList(readMyList());
   }, [selected]);
+
+  useEffect(() => {
+    if (!watchTarget) {
+      return;
+    }
+    setSelected({ id: watchTarget.id, mediaType: watchTarget.mediaType });
+    onConsumeWatchTarget();
+  }, [watchTarget, onConsumeWatchTarget]);
 
   return (
     <main className="main">

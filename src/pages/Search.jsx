@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { searchMovies } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";
 import MovieModal from "../components/MovieModal";
@@ -6,7 +6,7 @@ import SkeletonGrid from "../components/SkeletonGrid";
 import SectionError from "../components/SectionError";
 import useMovies from "../hooks/useMovies";
 
-export default function Search({ query }) {
+export default function Search({ query, watchTarget = null, onConsumeWatchTarget = () => {} }) {
   const [selected, setSelected] = useState(null);
   const cleanQuery = useMemo(() => query.trim(), [query]);
 
@@ -21,6 +21,14 @@ export default function Search({ query }) {
       errorMessage: "Search failed. Please try again.",
     }
   );
+
+  useEffect(() => {
+    if (!watchTarget) {
+      return;
+    }
+    setSelected({ id: watchTarget.id, mediaType: watchTarget.mediaType });
+    onConsumeWatchTarget();
+  }, [watchTarget, onConsumeWatchTarget]);
 
   return (
     <main className="main">

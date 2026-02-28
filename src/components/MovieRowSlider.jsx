@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MovieCard from "./MovieCard";
 
 export default function MovieRowSlider({
@@ -10,10 +10,31 @@ export default function MovieRowSlider({
 }) {
   // Show an initial chunk and reveal more on demand.
   const [visibleCount, setVisibleCount] = useState(12);
+  const sentinelRef = useRef(null);
 
   const safeMovies = movies.filter((movie) => movie && movie.id);
   const visibleMovies = safeMovies.slice(0, visibleCount);
   const canLoadMore = visibleCount < safeMovies.length;
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [title]);
+
+  useEffect(() => {
+    if (!canLoadMore || !sentinelRef.current) {
+      return undefined;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setVisibleCount((current) => Math.min(current + 12, safeMovies.length));
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [canLoadMore, safeMovies.length]);
 
   function loadMore() {
     setVisibleCount((current) => current + 12);
@@ -46,6 +67,7 @@ export default function MovieRowSlider({
           ))}
         </div>
       )}
+      {canLoadMore ? <div ref={sentinelRef} className="render-sentinel" aria-hidden="true" /> : null}
     </section>
   );
 }

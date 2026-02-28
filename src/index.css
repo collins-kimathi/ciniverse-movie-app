@@ -95,6 +95,7 @@ body {
 .search-form {
   display: flex;
   gap: 0.45rem;
+  position: relative;
 }
 
 .search-form input {
@@ -123,6 +124,34 @@ body {
 
 .search-form button:hover {
   background: var(--brand-dark);
+}
+
+.search-suggestions {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  left: 0;
+  width: 270px;
+  background: #181a20;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 0.3rem;
+  display: grid;
+  gap: 0.2rem;
+  z-index: 120;
+}
+
+.search-suggestion {
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+}
+
+.search-suggestion:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .main {
@@ -301,6 +330,11 @@ body {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
+.render-sentinel {
+  width: 100%;
+  height: 1px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
@@ -349,6 +383,17 @@ body {
   height: 250px;
   object-fit: cover;
   display: block;
+  transition: filter 0.25s ease, transform 0.25s ease;
+}
+
+.card img.loading {
+  filter: blur(10px);
+  transform: scale(1.04);
+}
+
+.card img.loaded {
+  filter: blur(0);
+  transform: scale(1);
 }
 
 .skeleton-card {

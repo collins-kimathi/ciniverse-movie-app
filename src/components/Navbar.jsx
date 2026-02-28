@@ -1,5 +1,6 @@
 import SearchBar from "./SearchBar";
 import InstallButton from "./InstallButton";
+import { appConfig } from "../config/appConfig";
 
 export default function Navbar({
   navigate,
@@ -11,7 +12,7 @@ export default function Navbar({
   return (
     <nav className="navbar">
       <button type="button" className="logo" onClick={() => navigate("home")}>
-        CINIVERSE
+        {appConfig.siteName.toUpperCase()}
       </button>
       <div className="nav-links">
         <button

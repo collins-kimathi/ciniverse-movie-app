@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   fetchMovieDetails,
   fetchShowDetails,
@@ -8,7 +8,14 @@ import {
 } from "../api/tmdb";
 import { fetchLicensedPlaybackSession, isPlaybackEnabled } from "../api/playback";
 import { licensedProviders } from "../config/licensedProviders";
-import { isInMyList, toggleMyList, upsertContinueWatching } from "../utils/library";
+import {
+  getContinueWatchingEntry,
+  isInMyList,
+  toggleMyList,
+  upsertContinueWatching,
+} from "../utils/library";
+import { trackEvent } from "../utils/analytics";
+import { uiLabels } from "../config/appConfig";
 
 export default function MovieModal({ movie, onClose }) {
   const [activeMovie, setActiveMovie] = useState(movie);
@@ -22,12 +29,17 @@ export default function MovieModal({ movie, onClose }) {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(isInMyList(movie.id));
   const [shareStatus, setShareStatus] = useState("");
+  const [resumePoint, setResumePoint] = useState(0);
+  const modalRef = useRef(null);
 
   const isShow = activeMovie.mediaType === "tv";
 
   useEffect(() => {
     setActiveMovie(movie);
     setSaved(isInMyList(movie.id));
+    const resumeEntry = getContinueWatchingEntry(movie.id, movie.mediaType || "movie");
+    setResumePoint(Number(resumeEntry?.resumeSeconds || 0));
+    trackEvent("open_modal", { id: movie.id, mediaType: movie.mediaType || "movie" });
   }, [movie]);
 
   useEffect(() => {
@@ -76,12 +88,39 @@ export default function MovieModal({ movie, onClose }) {
     function onKeyDown(event) {
       if (event.key === "Escape") {
         onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !modalRef.current) {
+        return;
+      }
+
+      const focusable = modalRef.current.querySelectorAll(
+        "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
+      );
+      if (!focusable.length) {
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
+
+  useEffect(() => {
+    const firstButton = modalRef.current?.querySelector("button");
+    firstButton?.focus();
+  }, [activeMovie.id]);
 
   useEffect(() => {
     if (!details) {
@@ -160,6 +199,11 @@ export default function MovieModal({ movie, onClose }) {
       if (stream) {
         setPlayback(stream);
         setShowFullMovie(true);
+        trackEvent("start_playback", {
+          id: activeMovie.id,
+          mediaType: activeMovie.mediaType || "movie",
+          title,
+        });
         upsertContinueWatching({
           id: activeMovie.id,
           mediaType: activeMovie.mediaType || "movie",
@@ -192,10 +236,19 @@ export default function MovieModal({ movie, onClose }) {
       vote_average: details.vote_average || 0,
     });
     setSaved(next);
+    trackEvent(next ? "add_my_list" : "remove_my_list", {
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      title,
+    });
   }
 
   async function onShare() {
-    const shareUrl = `${window.location.origin}/?watch=${activeMovie.id}`;
+    const currentHash = window.location.hash.replace(/^#/, "") || "/home";
+    const [pathOnly] = currentHash.split("?");
+    const shareUrl = `${window.location.origin}/#${pathOnly}?watch=${activeMovie.id}&type=${
+      activeMovie.mediaType || "movie"
+    }`;
     const payload = {
       title: `${title} on Ciniverse`,
       text: `Check out ${title} on Ciniverse`,
@@ -205,10 +258,12 @@ export default function MovieModal({ movie, onClose }) {
       if (navigator.share) {
         await navigator.share(payload);
         setShareStatus("Shared");
+        trackEvent("share_native", { id: activeMovie.id, title });
         return;
       }
       await navigator.clipboard.writeText(shareUrl);
       setShareStatus("Link copied");
+      trackEvent("share_copy_link", { id: activeMovie.id, title });
     } catch {
       setShareStatus("Share failed");
     }
@@ -229,9 +284,27 @@ export default function MovieModal({ movie, onClose }) {
     });
   }
 
+  function onVideoReady(event) {
+    if (!resumePoint) {
+      return;
+    }
+    try {
+      event.currentTarget.currentTime = resumePoint;
+    } catch {
+      // Ignore seek errors.
+    }
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${title} details`}
+        ref={modalRef}
+      >
         <button className="close-btn" onClick={onClose} aria-label="Close details">
           X
         </button>
@@ -273,17 +346,21 @@ export default function MovieModal({ movie, onClose }) {
                 disabled={playbackLoading}
               >
                 {playbackLoading
-                  ? "Loading Licensed Stream..."
+                  ? uiLabels.loadingStream
                   : showFullMovie
-                    ? "Hide Full Movie"
-                    : "Watch Full Movie"}
+                    ? uiLabels.hideFullMovie
+                    : uiLabels.watchFullMovie}
               </button>
             ) : (
               <p className="status-line">
                 Full-movie streaming is disabled. Add a licensed playback API to enable it.
               </p>
             )}
-            {playbackError ? <p className="status-line error">{playbackError}</p> : null}
+            {playbackError ? (
+              <p className="status-line error" aria-live="polite">
+                {playbackError}
+              </p>
+            ) : null}
             <p className="status-line provider-list">Licensed providers on Ciniverse:</p>
             <div className="provider-chips">
               {licensedProviders.map((provider) =>
@@ -314,7 +391,12 @@ export default function MovieModal({ movie, onClose }) {
                     allowFullScreen
                   />
                 ) : (
-                  <video controls poster={playback.poster} onTimeUpdate={onVideoProgress}>
+                  <video
+                    controls
+                    poster={playback.poster}
+                    onTimeUpdate={onVideoProgress}
+                    onLoadedMetadata={onVideoReady}
+                  >
                     <source
                       src={playback.src}
                       type={
@@ -337,7 +419,10 @@ export default function MovieModal({ movie, onClose }) {
               <button
                 type="button"
                 className="trailer-btn"
-                onClick={() => setShowTrailer((prev) => !prev)}
+                onClick={() => {
+                  setShowTrailer((prev) => !prev);
+                  trackEvent("toggle_trailer", { id: activeMovie.id, title });
+                }}
               >
                 {showTrailer ? "Hide Trailer" : "Watch Trailer Here"}
               </button>

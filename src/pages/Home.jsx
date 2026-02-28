@@ -7,37 +7,8 @@ import SkeletonRow from "../components/SkeletonRow";
 import SectionError from "../components/SectionError";
 import useMovies from "../hooks/useMovies";
 import { readContinueWatching } from "../utils/library";
-
-const GENRE_SECTIONS = [
-  { key: "action", title: "Action Hits", genreId: 28, emptyMessage: "No action movies found." },
-  {
-    key: "comedy",
-    title: "Comedy Picks",
-    genreId: 35,
-    emptyMessage: "No comedy movies found.",
-  },
-  { key: "drama", title: "Drama Stories", genreId: 18, emptyMessage: "No drama movies found." },
-  {
-    key: "thriller",
-    title: "Thriller Zone",
-    genreId: 53,
-    emptyMessage: "No thriller movies found.",
-  },
-  { key: "horror", title: "Horror Nights", genreId: 27, emptyMessage: "No horror movies found." },
-  { key: "scifi", title: "Sci-Fi Worlds", genreId: 878, emptyMessage: "No sci-fi movies found." },
-  {
-    key: "romance",
-    title: "Romance Picks",
-    genreId: 10749,
-    emptyMessage: "No romance movies found.",
-  },
-  {
-    key: "animation",
-    title: "Animation Spotlight",
-    genreId: 16,
-    emptyMessage: "No animation movies found.",
-  },
-];
+import { GENRE_SECTIONS } from "../config/genres";
+import { applyFilters } from "../utils/filters";
 
 function mergeUnique(...lists) {
   const byId = new Map();
@@ -47,33 +18,6 @@ function mergeUnique(...lists) {
     }
   });
   return Array.from(byId.values());
-}
-
-function applyFilters(movies, filters) {
-  return movies.filter((movie) => {
-    const release = movie.release_date || movie.first_air_date || "";
-    const year = Number(release.slice(0, 4));
-    const rating = Number(movie.vote_average || 0);
-    const lang = (movie.original_language || "").toLowerCase();
-
-    if (filters.year === "2020s" && (!year || year < 2020)) {
-      return false;
-    }
-    if (filters.year === "2010s" && (!year || year < 2010 || year > 2019)) {
-      return false;
-    }
-    if (filters.year === "2000s" && (!year || year < 2000 || year > 2009)) {
-      return false;
-    }
-    if (rating < filters.minRating) {
-      return false;
-    }
-    if (filters.language !== "all" && lang !== filters.language) {
-      return false;
-    }
-
-    return true;
-  });
 }
 
 function GenreRail({ section, filters, onSelect, onOpenGenre }) {
@@ -107,7 +51,11 @@ function GenreRail({ section, filters, onSelect, onOpenGenre }) {
   );
 }
 
-export default function Home({ onOpenGenre = () => {} }) {
+export default function Home({
+  onOpenGenre = () => {},
+  watchTarget = null,
+  onConsumeWatchTarget = () => {},
+}) {
   const HERO_ROTATE_MS = 8000;
   const [selected, setSelected] = useState(null);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
@@ -150,6 +98,14 @@ export default function Home({ onOpenGenre = () => {} }) {
   useEffect(() => {
     setContinueWatching(readContinueWatching());
   }, [selected]);
+
+  useEffect(() => {
+    if (!watchTarget) {
+      return;
+    }
+    setSelected({ id: watchTarget.id, mediaType: watchTarget.mediaType });
+    onConsumeWatchTarget();
+  }, [watchTarget, onConsumeWatchTarget]);
 
   const filteredTrending = useMemo(() => applyFilters(trending, filters), [trending, filters]);
   const filteredTopRated = useMemo(() => applyFilters(topRated, filters), [topRated, filters]);
