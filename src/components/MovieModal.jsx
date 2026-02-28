@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { fetchMovieDetails, IMG_BASE } from "../api/tmdb";
 import { fetchLicensedPlaybackSession, isPlaybackEnabled } from "../api/playback";
+import { licensedProviders } from "../config/licensedProviders";
 
 export default function MovieModal({ movie, onClose }) {
   const [details, setDetails] = useState(null);
   const [showTrailer, setShowTrailer] = useState(false);
   const [showFullMovie, setShowFullMovie] = useState(false);
   const [playback, setPlayback] = useState(null);
-  const [providerNames, setProviderNames] = useState([]);
-  const [providersLoading, setProvidersLoading] = useState(false);
   const [playbackLoading, setPlaybackLoading] = useState(false);
   const [playbackError, setPlaybackError] = useState("");
   const [error, setError] = useState("");
@@ -21,32 +20,17 @@ export default function MovieModal({ movie, onClose }) {
       setShowTrailer(false);
       setShowFullMovie(false);
       setPlayback(null);
-      setProviderNames([]);
-      setProvidersLoading(isPlaybackEnabled);
       setPlaybackLoading(false);
       setPlaybackError("");
       setError("");
 
       try {
-        const [detailsResult, streamResult] = await Promise.allSettled([
-          fetchMovieDetails(movie.id),
-          isPlaybackEnabled ? fetchLicensedPlaybackSession(movie.id) : Promise.resolve(null),
-        ]);
-
-        if (detailsResult.status !== "fulfilled") {
-          throw new Error("Failed to load movie details");
-        }
-
-        const stream = streamResult.status === "fulfilled" ? streamResult.value : null;
+        const data = await fetchMovieDetails(movie.id);
         if (!cancelled) {
-          setDetails(detailsResult.value);
-          setPlayback(stream);
-          setProviderNames(stream?.providers?.length ? stream.providers : []);
-          setProvidersLoading(false);
+          setDetails(data);
         }
       } catch {
         if (!cancelled) {
-          setProvidersLoading(false);
           setError("Failed to load movie details. Please try again.");
         }
       }
@@ -171,26 +155,28 @@ export default function MovieModal({ movie, onClose }) {
               </p>
             )}
             {playbackError ? <p className="status-line error">{playbackError}</p> : null}
-            {isPlaybackEnabled ? (
-              <>
-                <p className="status-line provider-list">Found on:</p>
-                {providersLoading ? (
-                  <p className="status-line">Checking licensed providers...</p>
-                ) : providerNames.length ? (
-                  <div className="provider-chips">
-                    {providerNames.map((providerName) => (
-                      <span key={providerName} className="provider-chip">
-                        {providerName}
-                      </span>
-                    ))}
-                  </div>
+            <p className="status-line provider-list">
+              Licensed providers on Ciniverse:
+            </p>
+            <div className="provider-chips">
+              {licensedProviders.map((provider) =>
+                provider.url ? (
+                  <a
+                    key={provider.name}
+                    href={provider.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="provider-chip provider-chip--link"
+                  >
+                    {provider.name}
+                  </a>
                 ) : (
-                  <p className="status-line">
-                    This title is not currently available on our licensed providers.
-                  </p>
-                )}
-              </>
-            ) : null}
+                  <span key={provider.name} className="provider-chip">
+                    {provider.name}
+                  </span>
+                )
+              )}
+            </div>
             {showFullMovie && hasPlayback ? (
               <div className="full-player-wrap">
                 {playback.type === "iframe" ? (

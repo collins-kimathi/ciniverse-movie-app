@@ -1,6 +1,7 @@
 export default function HeroFeatured({ movie, onPlay, rotateMs, tick }) {
-  const heroBackground = movie?.backdrop_path
-    ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}`
+  const heroBackgroundPath = movie?.backdrop_path || movie?.poster_path || "";
+  const heroBackground = heroBackgroundPath
+    ? `https://image.tmdb.org/t/p/original${heroBackgroundPath}`
     : "";
 
   if (!movie) {
@@ -8,16 +9,13 @@ export default function HeroFeatured({ movie, onPlay, rotateMs, tick }) {
   }
 
   return (
-    <section
-      className="hero"
-      style={
-        heroBackground
-          ? {
-              backgroundImage: `linear-gradient(to right, rgba(0,0,0,.92), rgba(0,0,0,.5)), url(${heroBackground})`,
-            }
-          : undefined
-      }
-    >
+    <section className="hero">
+      {heroBackground ? (
+        <>
+          <img className="hero-bg-image" src={heroBackground} alt="" aria-hidden="true" />
+          <div className="hero-bg-overlay" aria-hidden="true" />
+        </>
+      ) : null}
       <div className="hero-main">
         <h2>{movie.title}</h2>
         <p>{movie.overview || "No overview available."}</p>

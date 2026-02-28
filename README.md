@@ -50,6 +50,10 @@ VITE_PLAYBACK_API_BASE_URL=http://localhost:4000
 # Optional shared key sent as x-api-key header to your backend
 VITE_PLAYBACK_API_KEY=your_playback_api_key
 
+# Optional: override provider badges shown in the modal
+# Format: Provider Name|https://provider-url,Another Provider|https://url
+VITE_LICENSED_PROVIDERS=Netflix|https://www.netflix.com,Prime Video|https://www.primevideo.com
+
 ```
 
 You can use either variable. If `VITE_TMDB_BEARER_TOKEN` is set, it is used automatically.
@@ -112,7 +116,8 @@ Navigation is handled in-app via the top navbar.
 
 - The app uses TMDB image base path `https://image.tmdb.org/t/p/w500`.
 - Full-movie playback comes from your licensed playback backend.
-- Provider names in the modal come from your licensed playback backend response.
+- Licensed provider badges come from `VITE_LICENSED_PROVIDERS` (or built-in defaults).
+- SEO defaults in `index.html`, `public/robots.txt`, and `public/sitemap.xml` use `https://ciniverse.app`; replace that domain if your deployed URL is different.
 
 ## Scripts
 

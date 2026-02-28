@@ -25,20 +25,11 @@ function normalizePlayback(payload) {
     return null;
   }
 
-  const providers = Array.isArray(payload.providers)
-    ? payload.providers.filter((name) => typeof name === "string" && name.trim())
-    : Array.isArray(payload.providerNames)
-      ? payload.providerNames.filter((name) => typeof name === "string" && name.trim())
-      : typeof payload.provider === "string" && payload.provider.trim()
-        ? [payload.provider.trim()]
-        : [];
-
   return {
     type: stream.type || "iframe",
     src: stream.src,
     poster: stream.poster || "",
-    provider: providers[0] || payload.provider || "Licensed provider",
-    providers,
+    provider: payload.provider || "Licensed provider",
     region: payload.region || "US",
     expiresAt: payload.expiresAt || "",
   };
