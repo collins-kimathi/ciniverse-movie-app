@@ -69,21 +69,20 @@ export default function SearchBar({ onSearch }) {
   }
 
   return (
-    <form onSubmit={submit} className="relative" autoComplete="off">
+    <form
+      onSubmit={submit}
+      className={`search-form ${mobileOpen ? "mobile-open" : ""}`}
+      autoComplete="off"
+    >
       <button
         type="button"
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-white/8 text-xs text-[var(--text)] sm:hidden"
+        className="mobile-search-toggle"
         aria-label={mobileOpen ? "Close search" : "Open search"}
         onClick={() => setMobileOpen((prev) => !prev)}
       >
         <span aria-hidden="true">Find</span>
       </button>
-
-      <div
-        className={`gap-2 sm:flex ${
-          mobileOpen ? "absolute right-0 top-11 z-30 flex w-[min(92vw,340px)] rounded-xl border border-white/12 bg-[#181a20] p-2" : "hidden"
-        } sm:static sm:w-auto sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0`}
-      >
+      <div className="search-form-fields">
         <input
           ref={inputRef}
           value={query}
@@ -92,27 +91,16 @@ export default function SearchBar({ onSearch }) {
           onBlur={() => window.setTimeout(() => setFocused(false), 120)}
           placeholder="Search movies"
           aria-label="Search movies"
-          className="w-full rounded-full border border-[var(--border)] bg-white/8 px-4 py-2 text-sm text-[var(--text)] outline-none focus:border-[rgba(229,9,20,0.65)] sm:w-[270px]"
         />
-        <button
-          type="submit"
-          className="cursor-pointer rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white transition hover:bg-[var(--brand-dark)]"
-        >
-          Search
-        </button>
+        <button type="submit">Search</button>
       </div>
-
       {focused && filteredRecent.length ? (
-        <div
-          className="absolute left-0 top-[calc(100%+0.3rem)] z-[120] grid w-full gap-1 rounded-xl border border-white/14 bg-[#181a20] p-1 sm:w-[270px]"
-          role="listbox"
-          aria-label="Recent searches"
-        >
+        <div className="search-suggestions" role="listbox" aria-label="Recent searches">
           {filteredRecent.map((item) => (
             <button
               key={item}
               type="button"
-              className="cursor-pointer rounded-lg px-2 py-1.5 text-left text-sm text-[var(--text)] hover:bg-white/10"
+              className="search-suggestion"
               onClick={() => chooseRecent(item)}
             >
               {item}
