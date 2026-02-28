@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchByGenre, fetchPopular, fetchTrending, fetchTopRated } from "../api/tmdb";
+import { fetchByGenre, fetchTrending, fetchTopRated } from "../api/tmdb";
 import HeroFeatured from "../components/HeroFeatured";
 import MovieRowSlider from "../components/MovieRowSlider";
 import MovieModal from "../components/MovieModal";
@@ -41,7 +41,6 @@ export default function Home() {
   const HERO_ROTATE_MS = 8000;
   const [trending, setTrending] = useState([]);
   const [topRated, setTopRated] = useState([]);
-  const [popular, setPopular] = useState([]);
   const [genreRows, setGenreRows] = useState({});
   const [selected, setSelected] = useState(null);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
@@ -62,16 +61,12 @@ export default function Home() {
           trendingPage2,
           topRatedPage1,
           topRatedPage2,
-          popularPage1,
-          popularPage2,
           ...genrePages
         ] = await Promise.all([
           fetchTrending(1),
           fetchTrending(2),
           fetchTopRated(1),
           fetchTopRated(2),
-          fetchPopular(1),
-          fetchPopular(2),
           ...GENRE_SECTIONS.map((section) => fetchByGenre(section.genreId, 1)),
         ]);
 
@@ -92,9 +87,6 @@ export default function Home() {
           );
           setTopRated(
             mergeUnique(topRatedPage1.results || [], topRatedPage2.results || [])
-          );
-          setPopular(
-            mergeUnique(popularPage1.results || [], popularPage2.results || [])
           );
           const nextGenreRows = {};
           GENRE_SECTIONS.forEach((section, index) => {
@@ -122,13 +114,13 @@ export default function Home() {
 
   const topTwentyMovies = useMemo(() => {
     const byId = new Map();
-    [...trending, ...topRated, ...popular].forEach((movie) => {
+    [...trending, ...topRated].forEach((movie) => {
       if (movie?.id && !byId.has(movie.id)) {
         byId.set(movie.id, movie);
       }
     });
     return Array.from(byId.values()).slice(0, 20);
-  }, [trending, topRated, popular]);
+  }, [trending, topRated]);
 
   useEffect(() => {
     if (topTwentyMovies.length <= 1) {
@@ -164,7 +156,6 @@ export default function Home() {
         <>
           <SkeletonRow title="Trending This Week" />
           <SkeletonRow title="Top Rated" />
-          <SkeletonRow title="Popular Right Now" />
           <SkeletonRow title="Action Hits" />
           <SkeletonRow title="Comedy Picks" />
           <SkeletonRow title="Drama Stories" />
@@ -190,12 +181,6 @@ export default function Home() {
             movies={topRated}
             onSelect={setSelected}
             emptyMessage="No top rated movies found."
-          />
-          <MovieRowSlider
-            title="Popular Right Now"
-            movies={popular}
-            onSelect={setSelected}
-            emptyMessage="No popular movies found."
           />
           {GENRE_SECTIONS.map((section) => (
             <MovieRowSlider
