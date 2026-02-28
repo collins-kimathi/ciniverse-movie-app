@@ -68,6 +68,7 @@ export default function Home({
     minRating: 0,
     language: "all",
   });
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   const {
     movies: trending,
@@ -148,56 +149,75 @@ export default function Home({
         tick={heroTick}
       />
 
-      <section className="filter-chips" aria-label="Home filters">
-        <button
-          type="button"
-          className={filters.year === "all" ? "active" : ""}
-          onClick={() => setFilters((f) => ({ ...f, year: "all" }))}
-        >
-          Any Year
-        </button>
-        <button
-          type="button"
-          className={filters.year === "2020s" ? "active" : ""}
-          onClick={() => setFilters((f) => ({ ...f, year: "2020s" }))}
-        >
-          2020s
-        </button>
-        <button
-          type="button"
-          className={filters.year === "2010s" ? "active" : ""}
-          onClick={() => setFilters((f) => ({ ...f, year: "2010s" }))}
-        >
-          2010s
-        </button>
-        <button
-          type="button"
-          className={filters.year === "2000s" ? "active" : ""}
-          onClick={() => setFilters((f) => ({ ...f, year: "2000s" }))}
-        >
-          2000s
-        </button>
-        <button
-          type="button"
-          className={filters.minRating === 7 ? "active" : ""}
-          onClick={() => setFilters((f) => ({ ...f, minRating: f.minRating === 7 ? 0 : 7 }))}
-        >
-          Rating 7+
-        </button>
-        <button
-          type="button"
-          className={filters.language === "en" ? "active" : ""}
-          onClick={() => setFilters((f) => ({ ...f, language: f.language === "en" ? "all" : "en" }))}
-        >
-          English
-        </button>
-        <button
-          type="button"
-          className={filters.language === "ja" ? "active" : ""}
-          onClick={() => setFilters((f) => ({ ...f, language: f.language === "ja" ? "all" : "ja" }))}
-        >
-          Japanese
-        </button>
+      <section aria-label="Home filters">
+        <div className="filter-chips" style={{ flexWrap: "nowrap", overflowX: "auto" }}>
+          <button
+            type="button"
+            className={filters.year === "all" ? "active" : ""}
+            onClick={() => setFilters((f) => ({ ...f, year: "all" }))}
+          >
+            Any Year
+          </button>
+          <button
+            type="button"
+            className={filters.year === "2020s" ? "active" : ""}
+            onClick={() => setFilters((f) => ({ ...f, year: "2020s" }))}
+          >
+            2020s
+          </button>
+          <button
+            type="button"
+            className={filters.year === "2010s" ? "active" : ""}
+            onClick={() => setFilters((f) => ({ ...f, year: "2010s" }))}
+          >
+            2010s
+          </button>
+          <button
+            type="button"
+            className={filters.year === "2000s" ? "active" : ""}
+            onClick={() => setFilters((f) => ({ ...f, year: "2000s" }))}
+          >
+            2000s
+          </button>
+          <button
+            type="button"
+            className={showMoreFilters ? "active" : ""}
+            onClick={() => setShowMoreFilters((open) => !open)}
+            aria-expanded={showMoreFilters}
+          >
+            {showMoreFilters ? "Less" : "More"}
+          </button>
+        </div>
+
+        {showMoreFilters ? (
+          <div className="filter-chips" style={{ marginTop: "0.5rem" }}>
+            <button
+              type="button"
+              className={filters.minRating === 7 ? "active" : ""}
+              onClick={() => setFilters((f) => ({ ...f, minRating: f.minRating === 7 ? 0 : 7 }))}
+            >
+              Rating 7+
+            </button>
+            <button
+              type="button"
+              className={filters.language === "en" ? "active" : ""}
+              onClick={() =>
+                setFilters((f) => ({ ...f, language: f.language === "en" ? "all" : "en" }))
+              }
+            >
+              English
+            </button>
+            <button
+              type="button"
+              className={filters.language === "ja" ? "active" : ""}
+              onClick={() =>
+                setFilters((f) => ({ ...f, language: f.language === "ja" ? "all" : "ja" }))
+              }
+            >
+              Japanese
+            </button>
+          </div>
+        ) : null}
       </section>
 
       {trendingLoading ? <SkeletonRow title="Trending This Week" /> : null}
