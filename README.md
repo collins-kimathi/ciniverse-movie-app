@@ -16,7 +16,7 @@ It includes a cinematic home page, popular movies, anime movies, search, movie d
 - Search page:
   - Search movies by title
 - Movie details modal:
-  - Overview, rating, runtime, trailer (YouTube), licensed in-app playback, and legal provider redirects
+  - Overview, rating, runtime, trailer (YouTube), licensed in-app playback, and licensed provider listing
 - Global footer
 - Skeleton loading UI for smoother page loading
 
@@ -50,8 +50,9 @@ VITE_PLAYBACK_API_BASE_URL=http://localhost:4000
 # Optional shared key sent as x-api-key header to your backend
 VITE_PLAYBACK_API_KEY=your_playback_api_key
 
-# Region for TMDB legal provider redirect links
-VITE_WATCH_REGION=US
+# Optional: override provider badges shown in the modal
+# Format: Provider Name|https://provider-url,Another Provider|https://url
+VITE_LICENSED_PROVIDERS=Netflix|https://www.netflix.com,Prime Video|https://www.primevideo.com
 ```
 
 You can use either variable. If `VITE_TMDB_BEARER_TOKEN` is set, it is used automatically.
@@ -114,7 +115,7 @@ Navigation is handled in-app via the top navbar.
 
 - The app uses TMDB image base path `https://image.tmdb.org/t/p/w500`.
 - Full-movie playback comes from your licensed playback backend.
-- Provider redirects use TMDB watch-provider links for `VITE_WATCH_REGION` (default `US`).
+- Licensed provider badges come from `VITE_LICENSED_PROVIDERS` (or built-in defaults).
 
 ## Scripts
 

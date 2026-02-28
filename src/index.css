@@ -404,6 +404,7 @@ body {
   border: none;
   font-weight: 700;
   cursor: pointer;
+  margin-top: 0.7rem;
 }
 
 .trailer-btn:hover {
@@ -473,30 +474,13 @@ body {
   font-size: 1rem;
 }
 
-.provider-actions {
-  margin-bottom: 0.8rem;
-}
-
-.provider-link-btn {
-  display: inline-block;
-  text-decoration: none;
-  padding: 0.5rem 0.9rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text);
-  font-weight: 700;
-}
-
-.provider-link-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 .provider-list {
   margin-bottom: 0.55rem;
 }
 
 .provider-chips {
   margin-top: 0.3rem;
+  margin-bottom: 1rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
@@ -508,6 +492,14 @@ body {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text);
   font-size: 0.8rem;
+}
+
+.provider-chip--link {
+  text-decoration: none;
+}
+
+.provider-chip--link:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 @keyframes skeletonShimmer {
