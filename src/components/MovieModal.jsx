@@ -261,9 +261,8 @@ export default function MovieModal({ movie, onClose }) {
   }
 
   async function onShare() {
-    const currentHash = window.location.hash.replace(/^#/, "") || "/home";
-    const [pathOnly] = currentHash.split("?");
-    const shareUrl = `${window.location.origin}/#${pathOnly}?watch=${activeMovie.id}&type=${
+    const pathOnly = window.location.pathname || "/home";
+    const shareUrl = `${window.location.origin}${pathOnly}?watch=${activeMovie.id}&type=${
       activeMovie.mediaType || "movie"
     }`;
     const payload = {

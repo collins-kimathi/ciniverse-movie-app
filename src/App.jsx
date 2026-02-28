@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -19,55 +19,59 @@ export default function App() {
   const [installEvent, setInstallEvent] = useState(null);
   const [watchTarget, setWatchTarget] = useState(null);
 
-  useEffect(() => {
-    function parseRoute() {
-      const raw = window.location.hash.replace(/^#/, "") || "/home";
-      const [pathPart, queryPart = ""] = raw.split("?");
-      const query = new URLSearchParams(queryPart);
+  const parseRoute = useCallback(() => {
+    if (window.location.hash.startsWith("#/")) {
+      const migratedPath = window.location.hash.slice(1);
+      window.history.replaceState({}, "", migratedPath);
+    }
 
-      if (pathPart.startsWith("/search")) {
-        const q = query.get("q") || "";
-        setSearchQuery(q);
-        const watch = query.get("watch");
-        const mediaType = query.get("type") === "tv" ? "tv" : "movie";
-        setWatchTarget(watch ? { id: Number(watch), mediaType } : null);
-        setPage("search");
-        return;
-      }
+    const pathPart = window.location.pathname || "/home";
+    const query = new URLSearchParams(window.location.search || "");
 
-      if (pathPart.startsWith("/genre/")) {
-        const genreId = Number(pathPart.split("/")[2]);
-        const genre = GENRE_SECTIONS.find((section) => section.genreId === genreId);
-        if (genre) {
-          const watch = query.get("watch");
-          const mediaType = query.get("type") === "tv" ? "tv" : "movie";
-          setWatchTarget(watch ? { id: Number(watch), mediaType } : null);
-          setSelectedGenre(genre);
-          setPage("genre");
-          return;
-        }
-      }
-
-      if (pathPart === "/popular" || pathPart === "/shows" || pathPart === "/anime" || pathPart === "/my-list") {
-        const watch = query.get("watch");
-        const mediaType = query.get("type") === "tv" ? "tv" : "movie";
-        setWatchTarget(watch ? { id: Number(watch), mediaType } : null);
-        setPage(pathPart.slice(1));
-        return;
-      }
-
+    if (pathPart.startsWith("/search")) {
+      const q = query.get("q") || "";
+      setSearchQuery(q);
       const watch = query.get("watch");
       const mediaType = query.get("type") === "tv" ? "tv" : "movie";
       setWatchTarget(watch ? { id: Number(watch), mediaType } : null);
-      setPage("home");
+      setPage("search");
+      return;
     }
 
-    parseRoute();
-    window.addEventListener("hashchange", parseRoute);
-    return () => {
-      window.removeEventListener("hashchange", parseRoute);
-    };
+    if (pathPart.startsWith("/genre/")) {
+      const genreId = Number(pathPart.split("/")[2]);
+      const genre = GENRE_SECTIONS.find((section) => section.genreId === genreId);
+      if (genre) {
+        const watch = query.get("watch");
+        const mediaType = query.get("type") === "tv" ? "tv" : "movie";
+        setWatchTarget(watch ? { id: Number(watch), mediaType } : null);
+        setSelectedGenre(genre);
+        setPage("genre");
+        return;
+      }
+    }
+
+    if (pathPart === "/popular" || pathPart === "/shows" || pathPart === "/anime" || pathPart === "/my-list") {
+      const watch = query.get("watch");
+      const mediaType = query.get("type") === "tv" ? "tv" : "movie";
+      setWatchTarget(watch ? { id: Number(watch), mediaType } : null);
+      setPage(pathPart.slice(1));
+      return;
+    }
+
+    const watch = query.get("watch");
+    const mediaType = query.get("type") === "tv" ? "tv" : "movie";
+    setWatchTarget(watch ? { id: Number(watch), mediaType } : null);
+    setPage("home");
   }, []);
+
+  useEffect(() => {
+    parseRoute();
+    window.addEventListener("popstate", parseRoute);
+    return () => {
+      window.removeEventListener("popstate", parseRoute);
+    };
+  }, [parseRoute]);
 
   useEffect(() => {
     function onBeforeInstallPrompt(event) {
@@ -83,8 +87,8 @@ export default function App() {
 
   // Switch between top-level app pages.
   const navigate = (nextPage) => {
-    setPage(nextPage);
-    window.location.hash = `/${nextPage}`;
+    window.history.pushState({}, "", `/${nextPage}`);
+    parseRoute();
     trackEvent("navigate", { page: nextPage });
   };
 
@@ -103,14 +107,14 @@ export default function App() {
 
     if (!cleanQuery) {
       setSearchQuery("");
-      setPage("home");
-      window.location.hash = "/home";
+      window.history.pushState({}, "", "/home");
+      parseRoute();
       return;
     }
 
     setSearchQuery(cleanQuery);
-    setPage("search");
-    window.location.hash = `/search?q=${encodeURIComponent(cleanQuery)}`;
+    window.history.pushState({}, "", `/search?q=${encodeURIComponent(cleanQuery)}`);
+    parseRoute();
   };
 
   return (
@@ -128,9 +132,12 @@ export default function App() {
           watchTarget={watchTarget}
           onConsumeWatchTarget={() => setWatchTarget(null)}
           onOpenGenre={(genre) => {
-            setSelectedGenre(genre);
-            setPage("genre");
-            window.location.hash = `/genre/${genre.genreId}?title=${encodeURIComponent(genre.title)}`;
+            window.history.pushState(
+              {},
+              "",
+              `/genre/${genre.genreId}?title=${encodeURIComponent(genre.title)}`
+            );
+            parseRoute();
             trackEvent("open_genre", genre);
           }}
         />
