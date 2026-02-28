@@ -47,11 +47,19 @@ export const fetchPopular = (page = 1) =>
   request(`/movie/popular?page=${page}`);
 export const fetchTopRated = (page = 1) =>
   request(`/movie/top_rated?page=${page}`);
+export const fetchPopularShows = (page = 1) =>
+  request(`/tv/popular?page=${page}`);
 export const fetchAnime = (page = 1) =>
   request(
     `/discover/movie?include_adult=false&include_video=false&sort_by=popularity.desc&with_genres=16&with_origin_country=JP&page=${page}`,
+  );
+export const fetchByGenre = (genreId, page = 1) =>
+  request(
+    `/discover/movie?include_adult=false&include_video=false&sort_by=popularity.desc&with_genres=${genreId}&page=${page}`,
   );
 export const searchMovies = (query) =>
   request(`/search/movie?query=${encodeURIComponent(query)}`);
 export const fetchMovieDetails = (id) =>
   request(`/movie/${id}?append_to_response=videos,credits`);
+export const fetchShowDetails = (id) =>
+  request(`/tv/${id}?append_to_response=videos,credits`);

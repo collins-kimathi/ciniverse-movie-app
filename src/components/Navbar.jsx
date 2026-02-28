@@ -23,6 +23,13 @@ export default function Navbar({ navigate, onSearch, activePage }) {
         </button>
         <button
           type="button"
+          className={activePage === "shows" ? "active" : ""}
+          onClick={() => navigate("shows")}
+        >
+          Shows
+        </button>
+        <button
+          type="button"
           className={activePage === "anime" ? "active" : ""}
           onClick={() => navigate("anime")}
         >

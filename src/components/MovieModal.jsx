@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchMovieDetails, IMG_BASE } from "../api/tmdb";
+import { fetchMovieDetails, fetchShowDetails, IMG_BASE } from "../api/tmdb";
 import { fetchLicensedPlaybackSession, isPlaybackEnabled } from "../api/playback";
 import { licensedProviders } from "../config/licensedProviders";
 
@@ -11,6 +11,7 @@ export default function MovieModal({ movie, onClose }) {
   const [playbackLoading, setPlaybackLoading] = useState(false);
   const [playbackError, setPlaybackError] = useState("");
   const [error, setError] = useState("");
+  const isShow = movie.mediaType === "tv";
 
   useEffect(() => {
     let cancelled = false;
@@ -25,7 +26,9 @@ export default function MovieModal({ movie, onClose }) {
       setError("");
 
       try {
-        const data = await fetchMovieDetails(movie.id);
+        const data = isShow
+          ? await fetchShowDetails(movie.id)
+          : await fetchMovieDetails(movie.id);
         if (!cancelled) {
           setDetails(data);
         }
@@ -41,7 +44,7 @@ export default function MovieModal({ movie, onClose }) {
     return () => {
       cancelled = true;
     };
-  }, [movie.id]);
+  }, [movie.id, isShow]);
 
   useEffect(() => {
     // Let users dismiss the modal with Escape.
@@ -86,8 +89,15 @@ export default function MovieModal({ movie, onClose }) {
     : "https://via.placeholder.com/300x450?text=No+Image";
   const rating =
     typeof details.vote_average === "number" ? details.vote_average.toFixed(1) : "N/A";
-  const year = details.release_date?.slice(0, 4) || "Unknown";
-  const runtime = details.runtime ? `${details.runtime} min` : "Unknown runtime";
+  const title = details.title || details.name || "Untitled";
+  const year = (details.release_date || details.first_air_date)?.slice(0, 4) || "Unknown";
+  const runtime = isShow
+    ? details.episode_run_time?.[0]
+      ? `${details.episode_run_time[0]} min/episode`
+      : "Unknown runtime"
+    : details.runtime
+      ? `${details.runtime} min`
+      : "Unknown runtime";
   const hasPlayback = Boolean(playback?.src);
 
   async function onWatchFullMovie() {
@@ -130,7 +140,7 @@ export default function MovieModal({ movie, onClose }) {
         <div className="modal-content">
           <img src={poster} alt={details.title || "Movie poster"} />
           <div className="modal-info">
-            <h2>{details.title || "Untitled"}</h2>
+            <h2>{title}</h2>
             {details.tagline ? <p className="tagline">{details.tagline}</p> : null}
             <p>
               Rating: {rating} | {year} | {runtime}
@@ -181,7 +191,7 @@ export default function MovieModal({ movie, onClose }) {
               <div className="full-player-wrap">
                 {playback.type === "iframe" ? (
                   <iframe
-                    title={`${details.title || "Movie"} full movie`}
+                    title={`${title} full movie`}
                     src={playback.src}
                     allow="autoplay; encrypted-media; picture-in-picture"
                     allowFullScreen
@@ -218,7 +228,7 @@ export default function MovieModal({ movie, onClose }) {
             {showTrailer && trailer ? (
               <div className="trailer-frame-wrap">
                 <iframe
-                  title={`${details.title || "Movie"} trailer`}
+                  title={`${title} trailer`}
                   src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0`}
                   allow="autoplay; encrypted-media; picture-in-picture"
                   allowFullScreen

@@ -1,9 +1,40 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchPopular, fetchTrending, fetchTopRated } from "../api/tmdb";
+import { fetchByGenre, fetchPopular, fetchTrending, fetchTopRated } from "../api/tmdb";
 import HeroFeatured from "../components/HeroFeatured";
 import MovieRowSlider from "../components/MovieRowSlider";
 import MovieModal from "../components/MovieModal";
 import SkeletonRow from "../components/SkeletonRow";
+
+const GENRE_SECTIONS = [
+  { key: "action", title: "Action Hits", genreId: 28, emptyMessage: "No action movies found." },
+  {
+    key: "comedy",
+    title: "Comedy Picks",
+    genreId: 35,
+    emptyMessage: "No comedy movies found.",
+  },
+  { key: "drama", title: "Drama Stories", genreId: 18, emptyMessage: "No drama movies found." },
+  {
+    key: "thriller",
+    title: "Thriller Zone",
+    genreId: 53,
+    emptyMessage: "No thriller movies found.",
+  },
+  { key: "horror", title: "Horror Nights", genreId: 27, emptyMessage: "No horror movies found." },
+  { key: "scifi", title: "Sci-Fi Worlds", genreId: 878, emptyMessage: "No sci-fi movies found." },
+  {
+    key: "romance",
+    title: "Romance Picks",
+    genreId: 10749,
+    emptyMessage: "No romance movies found.",
+  },
+  {
+    key: "animation",
+    title: "Animation Spotlight",
+    genreId: 16,
+    emptyMessage: "No animation movies found.",
+  },
+];
 
 export default function Home() {
   // Featured hero switches to the next movie on this cadence.
@@ -11,6 +42,7 @@ export default function Home() {
   const [trending, setTrending] = useState([]);
   const [topRated, setTopRated] = useState([]);
   const [popular, setPopular] = useState([]);
+  const [genreRows, setGenreRows] = useState({});
   const [selected, setSelected] = useState(null);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroTick, setHeroTick] = useState(0);
@@ -32,6 +64,7 @@ export default function Home() {
           topRatedPage2,
           popularPage1,
           popularPage2,
+          ...genrePages
         ] = await Promise.all([
           fetchTrending(1),
           fetchTrending(2),
@@ -39,6 +72,7 @@ export default function Home() {
           fetchTopRated(2),
           fetchPopular(1),
           fetchPopular(2),
+          ...GENRE_SECTIONS.map((section) => fetchByGenre(section.genreId, 1)),
         ]);
 
         if (!cancelled) {
@@ -62,6 +96,11 @@ export default function Home() {
           setPopular(
             mergeUnique(popularPage1.results || [], popularPage2.results || [])
           );
+          const nextGenreRows = {};
+          GENRE_SECTIONS.forEach((section, index) => {
+            nextGenreRows[section.key] = mergeUnique(genrePages[index]?.results || []);
+          });
+          setGenreRows(nextGenreRows);
         }
       } catch {
         if (!cancelled) {
@@ -126,6 +165,14 @@ export default function Home() {
           <SkeletonRow title="Trending This Week" />
           <SkeletonRow title="Top Rated" />
           <SkeletonRow title="Popular Right Now" />
+          <SkeletonRow title="Action Hits" />
+          <SkeletonRow title="Comedy Picks" />
+          <SkeletonRow title="Drama Stories" />
+          <SkeletonRow title="Thriller Zone" />
+          <SkeletonRow title="Horror Nights" />
+          <SkeletonRow title="Sci-Fi Worlds" />
+          <SkeletonRow title="Romance Picks" />
+          <SkeletonRow title="Animation Spotlight" />
         </>
       ) : null}
       {error ? <p className="status-line error">{error}</p> : null}
@@ -150,6 +197,15 @@ export default function Home() {
             onSelect={setSelected}
             emptyMessage="No popular movies found."
           />
+          {GENRE_SECTIONS.map((section) => (
+            <MovieRowSlider
+              key={section.key}
+              title={section.title}
+              movies={genreRows[section.key] || []}
+              onSelect={setSelected}
+              emptyMessage={section.emptyMessage}
+            />
+          ))}
         </>
       ) : null}
 

@@ -6,8 +6,8 @@ export default function MovieCard({ movie, onClick }) {
     : "https://via.placeholder.com/300x450?text=No+Image";
   const rating =
     typeof movie.vote_average === "number" ? movie.vote_average.toFixed(1) : "N/A";
-  const year = movie.release_date?.slice(0, 4) || "Unknown";
-  const title = movie.title || "Untitled";
+  const year = (movie.release_date || movie.first_air_date)?.slice(0, 4) || "Unknown";
+  const title = movie.title || movie.name || "Untitled";
 
   return (
     <button
