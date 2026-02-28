@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&display=swap");
 
 * {
   margin: 0;
@@ -203,7 +204,7 @@ body {
 
 .hero {
   min-height: 430px;
-  border-radius: 14px;
+  border-radius: 20px;
   padding: 2.5rem;
   display: flex;
   flex-direction: column;
@@ -271,6 +272,8 @@ body {
   font-size: clamp(1.8rem, 3vw, 3.1rem);
   line-height: 1.1;
   max-width: 18ch;
+  font-family: "Manrope", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 800;
 }
 
 .hero p {
@@ -459,6 +462,8 @@ body {
   font-size: 0.92rem;
   margin-bottom: 0.28rem;
   color: var(--text);
+  font-family: "Manrope", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 800;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -562,6 +567,8 @@ body {
 
 .modal-info h2 {
   margin-bottom: 0.45rem;
+  font-family: "Manrope", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 800;
 }
 
 .modal-actions {
@@ -725,6 +732,8 @@ body {
   display: block;
   font-size: 0.75rem;
   padding: 0.45rem;
+  font-family: "Manrope", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 800;
 }
 
 .filter-chips {
@@ -1091,7 +1100,7 @@ body {
 
   .hero {
     min-height: 250px;
-    border-radius: 10px;
+    border-radius: 14px;
   }
 
   .hero p {
