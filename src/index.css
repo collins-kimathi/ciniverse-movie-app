@@ -410,6 +410,50 @@ body {
   background: var(--brand-dark);
 }
 
+.stream-btn {
+  display: inline-block;
+  padding: 0.6rem 1rem;
+  background: #f2f2f2;
+  color: #111;
+  border-radius: 999px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.stream-btn:hover {
+  background: #fff;
+}
+
+.stream-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.full-player-wrap {
+  margin: 0.85rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0d0f13;
+}
+
+.full-player-wrap iframe,
+.full-player-wrap video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  display: block;
+}
+
+.license-note {
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
 .trailer-frame-wrap {
   margin: 0.85rem 0;
   border-radius: 8px;

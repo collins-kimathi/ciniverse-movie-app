@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { fetchMovieDetails, fetchWatchProviders, IMG_BASE } from "../api/tmdb";
+import { fetchLicensedPlaybackSession } from "../api/playback";
 
 export default function MovieModal({ movie, onClose }) {
   const [details, setDetails] = useState(null);
   const [providers, setProviders] = useState(null);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [showFullMovie, setShowFullMovie] = useState(false);
+  const [playback, setPlayback] = useState(null);
+  const [playbackLoading, setPlaybackLoading] = useState(false);
+  const [playbackError, setPlaybackError] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -14,6 +19,10 @@ export default function MovieModal({ movie, onClose }) {
       setDetails(null);
       setProviders(null);
       setShowTrailer(false);
+      setShowFullMovie(false);
+      setPlayback(null);
+      setPlaybackLoading(false);
+      setPlaybackError("");
       setError("");
 
       try {
@@ -78,6 +87,7 @@ export default function MovieModal({ movie, onClose }) {
   const trailer = details.videos?.results?.find(
     (v) => v.type === "Trailer" && v.site === "YouTube"
   );
+  const hasPlaybackConfig = Boolean(import.meta.env.VITE_PLAYBACK_API_BASE_URL);
   const poster = details.poster_path
     ? `${IMG_BASE}${details.poster_path}`
     : "https://via.placeholder.com/300x450?text=No+Image";
@@ -89,6 +99,38 @@ export default function MovieModal({ movie, onClose }) {
   const rentNames = providers?.rent?.map((p) => p.provider_name) || [];
   const buyNames = providers?.buy?.map((p) => p.provider_name) || [];
   const providerLink = providers?.link || "";
+  const hasPlayback = Boolean(playback?.src);
+
+  async function onWatchFullMovie() {
+    if (showFullMovie && hasPlayback) {
+      setShowFullMovie(false);
+      return;
+    }
+
+    if (hasPlayback) {
+      setShowFullMovie(true);
+      return;
+    }
+
+    setPlaybackLoading(true);
+    setPlaybackError("");
+
+    try {
+      const stream = await fetchLicensedPlaybackSession(movie.id);
+      if (stream) {
+        setPlayback(stream);
+        setShowFullMovie(true);
+      } else {
+        setPlaybackError(
+          "No licensed full-movie stream is available for this title in your region."
+        );
+      }
+    } catch {
+      setPlaybackError("Failed to start licensed playback. Please try again.");
+    } finally {
+      setPlaybackLoading(false);
+    }
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -105,6 +147,54 @@ export default function MovieModal({ movie, onClose }) {
               Rating: {rating} | {year} | {runtime}
             </p>
             <p>{details.overview || "No overview available."}</p>
+            {hasPlaybackConfig ? (
+              <button
+                type="button"
+                className="stream-btn"
+                onClick={onWatchFullMovie}
+                disabled={playbackLoading}
+              >
+                {playbackLoading
+                  ? "Loading Licensed Stream..."
+                  : showFullMovie
+                    ? "Hide Full Movie"
+                    : "Watch Full Movie"}
+              </button>
+            ) : (
+              <p className="status-line">
+                Full-movie streaming is disabled. Add a licensed playback API to enable it.
+              </p>
+            )}
+            {playbackError ? <p className="status-line error">{playbackError}</p> : null}
+            {showFullMovie && hasPlayback ? (
+              <div className="full-player-wrap">
+                {playback.type === "iframe" ? (
+                  <iframe
+                    title={`${details.title || "Movie"} full movie`}
+                    src={playback.src}
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video controls poster={playback.poster}>
+                    <source
+                      src={playback.src}
+                      type={
+                        playback.type === "hls"
+                          ? "application/x-mpegURL"
+                          : playback.type === "dash"
+                            ? "application/dash+xml"
+                            : "video/mp4"
+                      }
+                    />
+                    Your browser does not support the video tag.
+                  </video>
+                )}
+                <p className="license-note">
+                  Source: {playback.provider} ({playback.region})
+                </p>
+              </div>
+            ) : null}
             {trailer ? (
               <button
                 type="button"

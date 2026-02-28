@@ -43,9 +43,42 @@ VITE_TMDB_API_KEY=your_tmdb_api_key
 
 # Option 2: Bearer token auth (preferred)
 VITE_TMDB_BEARER_TOKEN=your_tmdb_bearer_token
+
+# Licensed playback API (required for full-movie streaming)
+VITE_PLAYBACK_API_BASE_URL=http://localhost:4000
+
+# Optional shared key sent as x-api-key header to your backend
+VITE_PLAYBACK_API_KEY=your_playback_api_key
 ```
 
 You can use either variable. If `VITE_TMDB_BEARER_TOKEN` is set, it is used automatically.
+To stream full movies, `VITE_PLAYBACK_API_BASE_URL` must point to your licensed video backend.
+
+### Licensed playback endpoint contract
+
+Frontend call:
+
+- `GET /v1/playback/movie/:tmdbMovieId`
+
+Expected JSON response:
+
+```json
+{
+  "provider": "Mux",
+  "region": "US",
+  "expiresAt": "2026-03-01T12:00:00Z",
+  "playback": {
+    "type": "iframe",
+    "src": "https://player.mux.com/your_signed_playback_id"
+  }
+}
+```
+
+Notes:
+
+- Return `404` (or `204`) if the movie is not licensed for playback.
+- `playback.type` can be `iframe`, `hls`, `dash`, or `mp4`.
+- Your backend should enforce entitlement, region, and expiration checks before returning stream URLs.
 
 3. Start development server:
 
