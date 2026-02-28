@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchByGenre, fetchTrending, fetchTopRated } from "../api/tmdb";
+import {
+  fetchByGenre,
+  fetchSimilarMovies,
+  fetchSimilarShows,
+  fetchTrending,
+  fetchTopRated,
+} from "../api/tmdb";
 import HeroFeatured from "../components/HeroFeatured";
 import MovieRowSlider from "../components/MovieRowSlider";
 import MovieModal from "../components/MovieModal";
@@ -8,6 +14,11 @@ import SectionError from "../components/SectionError";
 import useMovies from "../hooks/useMovies";
 import { GENRE_SECTIONS } from "../config/genres";
 import { applyFilters } from "../utils/filters";
+import { readContinueWatching, readMyList } from "../utils/library";
+import {
+  buildRecommendationSeeds,
+  rankSimilarRecommendations,
+} from "../utils/recommendations";
 
 function mergeUnique(...lists) {
   const byId = new Map();
@@ -59,6 +70,8 @@ export default function Home({
   const [selected, setSelected] = useState(null);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroTick, setHeroTick] = useState(0);
+  const [continueWatching, setContinueWatching] = useState([]);
+  const [myList, setMyList] = useState([]);
   const [filters, setFilters] = useState({
     year: "all",
     minRating: 0,
@@ -94,6 +107,11 @@ export default function Home({
   );
 
   useEffect(() => {
+    setContinueWatching(readContinueWatching());
+    setMyList(readMyList());
+  }, [selected]);
+
+  useEffect(() => {
     if (!watchTarget) {
       return;
     }
@@ -103,6 +121,46 @@ export default function Home({
 
   const filteredTrending = useMemo(() => applyFilters(trending, filters), [trending, filters]);
   const filteredTopRated = useMemo(() => applyFilters(topRated, filters), [topRated, filters]);
+  const recommendationSeeds = useMemo(
+    () => buildRecommendationSeeds(continueWatching, myList, 5),
+    [continueWatching, myList]
+  );
+  const recommendationSeedKey = useMemo(
+    () => recommendationSeeds.map((seed) => `${seed.mediaType}:${seed.id}`).join("|"),
+    [recommendationSeeds]
+  );
+  const hasRecommendationSeeds = recommendationSeeds.length > 0;
+
+  const {
+    movies: recommendedMovies,
+    loading: recommendationsLoading,
+    error: recommendationsError,
+    retry: retryRecommendations,
+  } = useMovies(
+    async () => {
+      const groups = await Promise.all(
+        recommendationSeeds.map(async (seed) => {
+          const data =
+            seed.mediaType === "tv"
+              ? await fetchSimilarShows(seed.id)
+              : await fetchSimilarMovies(seed.id);
+
+          return {
+            seed,
+            items: (data.results || []).map((item) => ({ ...item, mediaType: seed.mediaType })),
+          };
+        })
+      );
+
+      return rankSimilarRecommendations(groups, recommendationSeeds, 24);
+    },
+    [recommendationSeedKey],
+    {
+      enabled: hasRecommendationSeeds,
+      initialData: [],
+      errorMessage: "Could not load personalized recommendations.",
+    }
+  );
 
   const topTwentyMovies = useMemo(() => {
     const byId = new Map();
@@ -195,6 +253,21 @@ export default function Home({
           Japanese
         </button>
       </section>
+
+      {hasRecommendationSeeds && recommendationsLoading ? (
+        <SkeletonRow title="Because You Watched" />
+      ) : null}
+      {hasRecommendationSeeds && recommendationsError ? (
+        <SectionError message={recommendationsError} onRetry={retryRecommendations} />
+      ) : null}
+      {hasRecommendationSeeds && !recommendationsLoading && !recommendationsError ? (
+        <MovieRowSlider
+          title="Because You Watched"
+          movies={recommendedMovies}
+          onSelect={setSelected}
+          emptyMessage="Watch or save more titles to improve recommendations."
+        />
+      ) : null}
 
       {trendingLoading ? <SkeletonRow title="Trending This Week" /> : null}
       {trendingError ? <SectionError message={trendingError} onRetry={retryTrending} /> : null}
