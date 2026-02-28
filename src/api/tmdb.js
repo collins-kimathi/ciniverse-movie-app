@@ -55,3 +55,5 @@ export const searchMovies = (query) =>
   request(`/search/movie?query=${encodeURIComponent(query)}`);
 export const fetchMovieDetails = (id) =>
   request(`/movie/${id}?append_to_response=videos,credits`);
+export const fetchWatchProviders = (id) =>
+  request(`/movie/${id}/watch/providers`);

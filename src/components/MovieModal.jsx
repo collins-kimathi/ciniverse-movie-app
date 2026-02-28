@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { fetchMovieDetails, IMG_BASE } from "../api/tmdb";
+import { fetchMovieDetails, fetchWatchProviders, IMG_BASE } from "../api/tmdb";
 import { fetchLicensedPlaybackSession, isPlaybackEnabled } from "../api/playback";
+
+const WATCH_REGION = (import.meta.env.VITE_WATCH_REGION || "US").toUpperCase();
 
 export default function MovieModal({ movie, onClose }) {
   const [details, setDetails] = useState(null);
+  const [providers, setProviders] = useState(null);
   const [showTrailer, setShowTrailer] = useState(false);
   const [showFullMovie, setShowFullMovie] = useState(false);
   const [playback, setPlayback] = useState(null);
@@ -16,6 +19,7 @@ export default function MovieModal({ movie, onClose }) {
 
     async function loadDetails() {
       setDetails(null);
+      setProviders(null);
       setShowTrailer(false);
       setShowFullMovie(false);
       setPlayback(null);
@@ -24,9 +28,13 @@ export default function MovieModal({ movie, onClose }) {
       setError("");
 
       try {
-        const data = await fetchMovieDetails(movie.id);
+        const [data, watchData] = await Promise.all([
+          fetchMovieDetails(movie.id),
+          fetchWatchProviders(movie.id),
+        ]);
         if (!cancelled) {
           setDetails(data);
+          setProviders(watchData?.results?.[WATCH_REGION] || null);
         }
       } catch {
         if (!cancelled) {
@@ -88,6 +96,8 @@ export default function MovieModal({ movie, onClose }) {
   const year = details.release_date?.slice(0, 4) || "Unknown";
   const runtime = details.runtime ? `${details.runtime} min` : "Unknown runtime";
   const hasPlayback = Boolean(playback?.src);
+  const flatrateNames = providers?.flatrate?.map((p) => p.provider_name) || [];
+  const providerLink = providers?.link || "";
 
   async function onWatchFullMovie() {
     if (showFullMovie && hasPlayback) {
@@ -154,6 +164,23 @@ export default function MovieModal({ movie, onClose }) {
               </p>
             )}
             {playbackError ? <p className="status-line error">{playbackError}</p> : null}
+            {providerLink ? (
+              <a
+                href={providerLink}
+                target="_blank"
+                rel="noreferrer"
+                className="provider-link-btn"
+              >
+                Watch on Licensed Provider
+              </a>
+            ) : (
+              <p className="status-line">
+                No licensed provider link found for {WATCH_REGION} in TMDb data.
+              </p>
+            )}
+            {flatrateNames.length ? (
+              <p className="status-line">Streaming on: {flatrateNames.join(", ")}</p>
+            ) : null}
             {showFullMovie && hasPlayback ? (
               <div className="full-player-wrap">
                 {playback.type === "iframe" ? (

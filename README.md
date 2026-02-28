@@ -16,7 +16,7 @@ It includes a cinematic home page, popular movies, anime movies, search, movie d
 - Search page:
   - Search movies by title
 - Movie details modal:
-  - Overview, rating, runtime, trailer (YouTube), and licensed full-movie playback
+  - Overview, rating, runtime, trailer (YouTube), licensed in-app playback, and legal provider redirects
 - Global footer
 - Skeleton loading UI for smoother page loading
 
@@ -53,6 +53,9 @@ VITE_PLAYBACK_API_KEY=your_playback_api_key
 # Optional fallback demo full-movie stream (used when backend is unavailable)
 VITE_PLAYBACK_DEMO_MP4_SRC=https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
 VITE_PLAYBACK_DEMO_POSTER=https://peach.blender.org/wp-content/uploads/title_anouncement.jpg
+
+# Region for TMDB legal provider redirect links
+VITE_WATCH_REGION=US
 ```
 
 You can use either variable. If `VITE_TMDB_BEARER_TOKEN` is set, it is used automatically.
@@ -116,6 +119,7 @@ Navigation is handled in-app via the top navbar.
 
 - The app uses TMDB image base path `https://image.tmdb.org/t/p/w500`.
 - Full-movie playback comes from your licensed playback backend.
+- Provider redirects use TMDB watch-provider links for `VITE_WATCH_REGION` (default `US`).
 
 ## Scripts
 
