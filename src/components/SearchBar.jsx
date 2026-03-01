@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { pushRecentSearch, readRecentSearches } from "../utils/library";
+import { clearRecentSearches, pushRecentSearch, readRecentSearches } from "../utils/library";
 import { trackEvent } from "../utils/analytics";
 
 export default function SearchBar({ onSearch }) {
@@ -68,6 +68,15 @@ export default function SearchBar({ onSearch }) {
     setMobileOpen(false);
   }
 
+  function clearHistory() {
+    clearRecentSearches();
+    setRecent([]);
+    setQuery("");
+    onSearch("");
+    setFocused(false);
+    trackEvent("search_history_cleared");
+  }
+
   return (
     <form
       onSubmit={submit}
@@ -80,10 +89,13 @@ export default function SearchBar({ onSearch }) {
         aria-label={mobileOpen ? "Close search" : "Open search"}
         onClick={() => setMobileOpen((prev) => !prev)}
       >
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18">
+          <circle cx="10" cy="10" r="6.5" fill="none" stroke="#ff3a45" strokeWidth="3.2" />
           <path
-            d="M15.5 14h-.79l-.28-.27a6 6 0 1 0-.71.71l.27.28v.79L20 21.49 21.49 20zM10 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10"
-            fill="currentColor"
+            d="M14.8 14.8 20.8 20.8"
+            stroke="#ff3a45"
+            strokeWidth="3.4"
+            strokeLinecap="round"
           />
         </svg>
       </button>
@@ -101,6 +113,23 @@ export default function SearchBar({ onSearch }) {
       </div>
       {focused && filteredRecent.length ? (
         <div className="search-suggestions" role="listbox" aria-label="Recent searches">
+          <div className="search-suggestions-head">
+            <span>Recent searches</span>
+            <button
+              type="button"
+              className="search-clear-history"
+              onClick={clearHistory}
+              aria-label="Clear search history"
+              title="Clear search history"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14">
+                <path
+                  d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h2v9H7V9Zm4 0h2v9h-2V9Zm4 0h2v9h-2V9Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+          </div>
           {filteredRecent.map((item) => (
             <button
               key={item}

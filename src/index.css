@@ -92,6 +92,9 @@ body {
   color: var(--text);
   border-radius: 999px;
   padding: 0.45rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   cursor: pointer;
   font-weight: 700;
 }
@@ -170,6 +173,12 @@ body {
   background: var(--brand-dark);
 }
 
+.search-form .mobile-search-toggle,
+.search-form .mobile-search-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+}
+
 .search-suggestions {
   position: absolute;
   top: calc(100% + 0.3rem);
@@ -182,6 +191,38 @@ body {
   display: grid;
   gap: 0.2rem;
   z-index: 120;
+}
+
+.search-suggestions-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.2rem 0.35rem 0.1rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.search-clear-history {
+  border: none;
+  background: transparent;
+  color: rgba(245, 245, 241, 0.88);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+}
+
+.search-clear-history:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .search-suggestion {
@@ -956,15 +997,14 @@ body {
 @media (max-width: 640px) {
   .navbar {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas:
-      "menu logo search"
-      "links links links";
-    row-gap: 0.5rem;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "menu logo install search";
+    row-gap: 0;
     column-gap: 0.5rem;
     padding: 0.62rem max(0.55rem, env(safe-area-inset-right))
       0.6rem max(0.55rem, env(safe-area-inset-left));
     align-items: center;
+    position: relative;
   }
 
   .logo {
@@ -996,6 +1036,31 @@ body {
     margin: 0;
     justify-content: flex-end;
     justify-self: end;
+  }
+
+  .install-btn {
+    grid-area: install;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+    padding: 0;
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--brand);
+    justify-self: end;
+    font-size: 0;
+  }
+
+  .install-btn svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .install-btn-text {
+    display: none;
   }
 
   .mobile-search-toggle {
@@ -1040,15 +1105,15 @@ body {
   }
 
   .nav-links {
-    grid-area: links;
-    order: initial;
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    left: max(0.55rem, env(safe-area-inset-left));
     display: none;
-    width: 100%;
+    width: min(58vw, 260px);
+    max-width: calc(100vw - 1.1rem);
+    min-width: 190px;
     margin: 0;
-    padding-top: 0.15rem;
-    overflow-x: auto;
-    white-space: nowrap;
-    flex-wrap: nowrap;
+    z-index: 160;
   }
 
   .nav-links.mobile-open {
@@ -1069,7 +1134,6 @@ body {
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
-
   .row-slider-grid {
     display: grid;
     grid-auto-flow: column;

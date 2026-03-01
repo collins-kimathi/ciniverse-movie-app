@@ -78,3 +78,7 @@ export function pushRecentSearch(query) {
   );
   writeJson(RECENT_SEARCHES_KEY, next);
 }
+
+export function clearRecentSearches() {
+  writeJson(RECENT_SEARCHES_KEY, []);
+}
