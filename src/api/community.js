@@ -2,6 +2,7 @@ const COMMUNITY_API_BASE_URL = (import.meta.env.VITE_COMMUNITY_API_BASE_URL || "
   /\/$/,
   ""
 );
+const COMMUNITY_API_PREFIX = COMMUNITY_API_BASE_URL ? "/v1" : "/api/v1";
 
 function toNumberMap(value) {
   const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -47,12 +48,12 @@ async function request(path, options = {}) {
 }
 
 export async function fetchCommunityData(id, mediaType = "movie") {
-  const payload = await request(`/v1/community/${mediaType}/${id}`);
+  const payload = await request(`${COMMUNITY_API_PREFIX}/community/${mediaType}/${id}`);
   return normalizeCommunityPayload(payload);
 }
 
 export async function postCommunityNote({ id, mediaType = "movie", text, author }) {
-  const payload = await request(`/v1/community/${mediaType}/${id}/notes`, {
+  const payload = await request(`${COMMUNITY_API_PREFIX}/community/${mediaType}/${id}/notes`, {
     method: "POST",
     body: JSON.stringify({ text, author }),
   });
@@ -60,9 +61,12 @@ export async function postCommunityNote({ id, mediaType = "movie", text, author 
 }
 
 export async function postCommunityRating({ id, mediaType = "movie", rating }) {
-  const payload = await request(`/v1/community/${mediaType}/${id}/ratings`, {
-    method: "POST",
-    body: JSON.stringify({ rating }),
-  });
+  const payload = await request(
+    `${COMMUNITY_API_PREFIX}/community/${mediaType}/${id}/ratings`,
+    {
+      method: "POST",
+      body: JSON.stringify({ rating }),
+    }
+  );
   return normalizeCommunityPayload(payload);
 }
