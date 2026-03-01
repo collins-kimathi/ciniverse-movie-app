@@ -1,1 +1,50 @@
-{}
+{
+  "movie:550": {
+    "mediaType": "movie",
+    "id": 550,
+    "notes": [
+      {
+        "id": "1772370417648-00pt3ax",
+        "text": "test note",
+        "author": "debug",
+        "createdAt": "2026-03-01T13:06:57.649Z"
+      }
+    ],
+    "ratings": {
+      "totalRatings": 0,
+      "sumRatings": 0,
+      "counts": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0
+      }
+    },
+    "updatedAt": "2026-03-01T13:06:57.649Z"
+  },
+  "movie:1272837": {
+    "mediaType": "movie",
+    "id": 1272837,
+    "notes": [
+      {
+        "id": "1772370801852-9zutkue",
+        "text": "wdqd",
+        "author": "ReelNotes User",
+        "createdAt": "2026-03-01T13:13:21.852Z"
+      }
+    ],
+    "ratings": {
+      "totalRatings": 1,
+      "sumRatings": 5,
+      "counts": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 1
+      }
+    },
+    "updatedAt": "2026-03-01T13:13:21.852Z"
+  }
+}
