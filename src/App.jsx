@@ -99,7 +99,7 @@ export default function App() {
       genre: selectedGenre ? `/genre/${selectedGenre.genreId}` : "/home",
     };
     const titleByPage = {
-      home: "Ciniverse | Movie Notebook, Trailers, Ratings & Notes",
+      home: "Ciniverse | ReelNotes, Trailers, Ratings & Notes",
       popular: "Popular Movies | Ciniverse",
       shows: "Popular Shows | Ciniverse",
       anime: "Anime Movies | Ciniverse",
@@ -109,14 +109,14 @@ export default function App() {
     };
     const descByPage = {
       home:
-        "Ciniverse is a movie notebook where you discover titles, watch trailers, rate what you watched, and publish notes for others to read.",
+        "Ciniverse is where you discover titles, watch trailers, rate what you watched, and publish ReelNotes for others to read.",
       popular: "Explore popular movies trending worldwide on Ciniverse.",
       shows: "Discover popular TV shows and start watching on Ciniverse.",
       anime: "Browse top anime movies and discover your next favorite on Ciniverse.",
-      "my-list": "Manage your saved movies and shows, plus your personal movie notebook picks.",
+      "my-list": "Manage your saved movies and shows, plus your personal ReelNotes picks.",
       search: searchQuery
-        ? `Search results for ${searchQuery} on Ciniverse movie notebook.`
-        : "Search movies, trailers, ratings, and notebook notes on Ciniverse.",
+        ? `Search results for ${searchQuery} on Ciniverse ReelNotes.`
+        : "Search movies, trailers, ratings, and ReelNotes on Ciniverse.",
       genre: selectedGenre
         ? `Explore ${selectedGenre.title} movies on Ciniverse.`
         : "Explore movies by genre on Ciniverse.",

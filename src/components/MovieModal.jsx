@@ -215,7 +215,7 @@ export default function MovieModal({ movie, onClose }) {
   const topCast = (details.credits?.cast || []).slice(0, 5);
   const watched = Boolean(notebook?.watched);
   const notebookRating =
-    typeof notebook?.userRating === "number" && notebook.userRating > 0 ? notebook.userRating : "";
+    typeof notebook?.userRating === "number" && notebook.userRating > 0 ? notebook.userRating : 0;
   const notebookRecommendation =
     notebook?.recommendation === "recommend" ||
     notebook?.recommendation === "skip" ||
@@ -365,31 +365,32 @@ export default function MovieModal({ movie, onClose }) {
     });
   }
 
-  function onRatingChange(event) {
-    const nextRating = Number(event.target.value);
+  function onRatingChange(nextRating) {
+    const resolvedRating = notebookRating === nextRating ? null : nextRating;
     applyNotebookFeedback({
       watched: true,
-      userRating: Number.isFinite(nextRating) && nextRating >= 1 ? nextRating : null,
+      userRating: Number.isFinite(resolvedRating) && resolvedRating >= 1 ? resolvedRating : null,
       recommendation: notebookRecommendation,
     });
     trackEvent("movie_notebook_rating", {
       id: activeMovie.id,
       mediaType: activeMovie.mediaType || "movie",
-      rating: nextRating,
+      rating: resolvedRating,
     });
   }
 
-  function onRecommendationChange(event) {
-    const nextRecommendation = event.target.value;
+  function onRecommendationChange(nextRecommendation) {
+    const resolvedRecommendation =
+      notebookRecommendation === nextRecommendation ? "undecided" : nextRecommendation;
     applyNotebookFeedback({
       watched: true,
       userRating: notebookRating,
-      recommendation: nextRecommendation,
+      recommendation: resolvedRecommendation,
     });
     trackEvent("movie_notebook_recommendation", {
       id: activeMovie.id,
       mediaType: activeMovie.mediaType || "movie",
-      recommendation: nextRecommendation,
+      recommendation: resolvedRecommendation,
     });
   }
 
@@ -448,76 +449,6 @@ export default function MovieModal({ movie, onClose }) {
               Rating: {rating} | {year} | {runtime}
             </p>
             <p>{details.overview || "No overview available."}</p>
-            <section className="notebook-panel" aria-label="Movie notebook">
-              <p className="status-line provider-list">Movie Notebook</p>
-              <p className="notebook-helper">
-                Mark as watched, rate it, suggest it, and add notes for other visitors to read.
-              </p>
-              <label className="notebook-check">
-                <input type="checkbox" checked={watched} onChange={onWatchedChange} />
-                I have watched this title
-              </label>
-              <div className="notebook-feedback-grid">
-                <label>
-                  My Rating (1-10)
-                  <select value={notebookRating} onChange={onRatingChange} disabled={!watched}>
-                    <option value="">Choose</option>
-                    {Array.from({ length: 10 }, (_, index) => index + 1).map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Suggest This Title?
-                  <select
-                    value={notebookRecommendation}
-                    onChange={onRecommendationChange}
-                    disabled={!watched}
-                  >
-                    <option value="undecided">Undecided</option>
-                    <option value="recommend">Yes, suggest it</option>
-                    <option value="skip">No, skip it</option>
-                  </select>
-                </label>
-              </div>
-              <form className="notebook-note-form" onSubmit={onAddNotebookNote}>
-                <textarea
-                  value={noteText}
-                  onChange={(event) => {
-                    setNoteText(event.target.value);
-                    if (noteStatus) {
-                      setNoteStatus("");
-                    }
-                  }}
-                  placeholder={`Add a note about ${title}`}
-                  maxLength={500}
-                  rows={3}
-                />
-                <div className="notebook-note-actions">
-                  <button type="submit" className="row-more-btn">
-                    Post Note
-                  </button>
-                  {noteStatus ? <span className="status-inline">{noteStatus}</span> : null}
-                </div>
-              </form>
-              <div className="notebook-notes">
-                {notebookNotes.length ? (
-                  notebookNotes.map((note) => (
-                    <article key={note.id} className="notebook-note">
-                      <p>{note.text}</p>
-                      <span>
-                        {note.author || "Movie Notebook User"} |{" "}
-                        {new Date(note.createdAt).toLocaleDateString()}
-                      </span>
-                    </article>
-                  ))
-                ) : (
-                  <p className="status-line">No notes yet. Be the first to add one.</p>
-                )}
-              </div>
-            </section>
             {topCast.length ? (
               <div className="cast-block">
                 <p className="status-line provider-list">Top Cast</p>
@@ -627,6 +558,121 @@ export default function MovieModal({ movie, onClose }) {
                 />
               </div>
             ) : null}
+            <section className="notebook-panel" aria-label="ReelNotes">
+              <p className="status-line provider-list">ReelNotes</p>
+              <p className="notebook-helper">
+                After watching the trailer, mark as watched, rate it, suggest it, and share notes.
+              </p>
+              <label className="notebook-check">
+                <input type="checkbox" checked={watched} onChange={onWatchedChange} />
+                I have watched this title
+              </label>
+              <div className="notebook-feedback-grid">
+                <label>
+                  My Rating
+                  <div
+                    className="star-rating"
+                    role="radiogroup"
+                    aria-label="My rating"
+                  >
+                    {Array.from({ length: 5 }, (_, index) => {
+                      const starValue = index + 1;
+                      const active = starValue <= notebookRating;
+                      return (
+                        <button
+                          key={starValue}
+                          type="button"
+                          className={`star-btn ${active ? "is-active" : ""}`.trim()}
+                          onClick={() => onRatingChange(starValue)}
+                          role="radio"
+                          aria-checked={notebookRating === starValue}
+                          aria-label={`${starValue} star${starValue > 1 ? "s" : ""}`}
+                        >
+                          ★
+                        </button>
+                      );
+                    })}
+                  </div>
+                </label>
+                <label>
+                  Suggest This Title?
+                  <div
+                    className="recommendation-group"
+                    role="radiogroup"
+                    aria-label="Suggest this title"
+                  >
+                    <button
+                      type="button"
+                      className={`recommendation-chip ${
+                        notebookRecommendation === "recommend" ? "is-active recommend" : ""
+                      }`.trim()}
+                      onClick={() => onRecommendationChange("recommend")}
+                      role="radio"
+                      aria-checked={notebookRecommendation === "recommend"}
+                    >
+                      Suggest
+                    </button>
+                    <button
+                      type="button"
+                      className={`recommendation-chip ${
+                        notebookRecommendation === "skip" ? "is-active skip" : ""
+                      }`.trim()}
+                      onClick={() => onRecommendationChange("skip")}
+                      role="radio"
+                      aria-checked={notebookRecommendation === "skip"}
+                    >
+                      Skip
+                    </button>
+                    <button
+                      type="button"
+                      className={`recommendation-chip ${
+                        notebookRecommendation === "undecided" ? "is-active undecided" : ""
+                      }`.trim()}
+                      onClick={() => onRecommendationChange("undecided")}
+                      role="radio"
+                      aria-checked={notebookRecommendation === "undecided"}
+                    >
+                      Undecided
+                    </button>
+                  </div>
+                </label>
+              </div>
+              <form className="notebook-note-form" onSubmit={onAddNotebookNote}>
+                <textarea
+                  value={noteText}
+                  onChange={(event) => {
+                    setNoteText(event.target.value);
+                    if (noteStatus) {
+                      setNoteStatus("");
+                    }
+                  }}
+                  placeholder={`Add your ReelNotes on ${title}`}
+                  maxLength={500}
+                  rows={3}
+                />
+                <div className="notebook-note-actions">
+                  <button type="submit" className="row-more-btn">
+                    Post Note
+                  </button>
+                  {noteStatus ? <span className="status-inline">{noteStatus}</span> : null}
+                </div>
+              </form>
+              <div className="notebook-notes">
+                {notebookNotes.length ? (
+                  notebookNotes.map((note) => (
+                    <article key={note.id} className="notebook-note">
+                      <p>{note.text}</p>
+                      <span>
+                        {note.author || "ReelNotes User"} |{" "}
+                        {new Date(note.createdAt).toLocaleDateString()}
+                      </span>
+                    </article>
+                  ))
+                ) : (
+                  <p className="status-line">No ReelNotes yet. Be the first to add one.</p>
+                )}
+              </div>
+            </section>
             {similar.length ? (
               <div className="similar-wrap">
                 <p className="status-line">Similar Titles</p>

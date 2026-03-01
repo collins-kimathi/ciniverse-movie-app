@@ -131,7 +131,7 @@ export function upsertMovieNotebookFeedback({
   const current = store[key] || {};
   const nextRating =
     typeof userRating === "number" && Number.isFinite(userRating)
-      ? Math.max(1, Math.min(10, Math.round(userRating)))
+      ? Math.max(1, Math.min(5, Math.round(userRating)))
       : null;
   const nextRecommendation =
     recommendation === "recommend" || recommendation === "skip" || recommendation === "undecided"
