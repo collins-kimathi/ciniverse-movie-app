@@ -15,19 +15,24 @@ async function upstashCommand(args) {
   if (!config) {
     return null;
   }
-  const response = await fetch(`${config.url}/pipeline`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${config.token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify([args]),
-  });
-  if (!response.ok) {
-    throw new Error(`Upstash request failed: ${response.status}`);
+  try {
+    const response = await fetch(`${config.url}/pipeline`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([args]),
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const payload = await response.json();
+    return payload?.[0]?.result ?? null;
+  } catch {
+    // Fallback to in-memory store when Upstash is unavailable.
+    return null;
   }
-  const payload = await response.json();
-  return payload?.[0]?.result ?? null;
 }
 
 const inMemoryStore = globalThis.__ciniverseCommunityStore || new Map();
@@ -88,4 +93,3 @@ export function toPublicEntry(entry) {
     updatedAt: entry?.updatedAt || new Date().toISOString(),
   };
 }
-
