@@ -59,9 +59,8 @@ VITE_LICENSED_PROVIDERS=Netflix|https://www.netflix.com,Prime Video|https://www.
 # VITE_COMMUNITY_API_BASE_URL=https://your-api-domain.com
 
 # Optional persistent store for Vercel /api community endpoints (recommended in production)
-# You can use Vercel KV or Upstash Redis REST credentials
-KV_REST_API_URL=your_kv_rest_api_url
-KV_REST_API_TOKEN=your_kv_rest_api_token
+UPSTASH_REDIS_REST_URL=your_upstash_redis_rest_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
 
 ```
 
@@ -153,7 +152,7 @@ Navigation is handled in-app via the top navbar.
 - Full-movie playback comes from your licensed playback backend.
 - Licensed provider badges come from `VITE_LICENSED_PROVIDERS` (or built-in defaults).
 - SEO defaults in `index.html`, `public/robots.txt`, and `public/sitemap.xml` are set to `https://ciniverse-movie-app.vercel.app`.
-- For production shared community data, configure `KV_REST_API_URL` and `KV_REST_API_TOKEN`. Without them, Vercel /api uses in-memory fallback (not durable).
+- For production shared community data, configure `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. Without them, Vercel /api uses in-memory fallback (not durable).
 
 ## Scripts
 
@@ -167,7 +166,7 @@ Navigation is handled in-app via the top navbar.
 - `src/api/tmdb.js` - TMDB request helpers and endpoints
 - `src/api/community.js` - Shared community notes + rating counts API client
 - `api/v1/community/` - Vercel serverless routes for shared notes/ratings
-- `api/_lib/communityStore.js` - Shared store adapter (KV/Upstash or in-memory fallback)
+- `api/_lib/communityStore.js` - Shared store adapter (Upstash or in-memory fallback)
 - `server/community-api.mjs` - Minimal Node API server for shared notes and ratings
 - `src/pages/` - Top-level pages (`Home`, `Popular`, `Anime`, `Search`)
 - `src/components/` - UI components (navbar, cards, modal, skeletons, footer)
