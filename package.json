@@ -8,7 +8,8 @@
     "build": "vite build",
     "test": "node --test",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "community:api": "node server/community-api.mjs"
   },
   "dependencies": {
     "react": "^19.2.0",

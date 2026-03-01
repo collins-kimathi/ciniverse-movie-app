@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   fetchByGenre,
+  fetchLatestReleases,
   fetchTrending,
   fetchTopRated,
 } from "../api/tmdb";
@@ -97,6 +98,20 @@ export default function Home({
     { errorMessage: "Could not load top rated movies." }
   );
 
+  const {
+    movies: latestReleases,
+    loading: latestLoading,
+    error: latestError,
+    retry: retryLatest,
+  } = useMovies(
+    async () => {
+      const [page1, page2] = await Promise.all([fetchLatestReleases(1), fetchLatestReleases(2)]);
+      return mergeUnique(page1.results || [], page2.results || []);
+    },
+    [],
+    { errorMessage: "Could not load latest releases." }
+  );
+
   useEffect(() => {
     if (!watchTarget) {
       return;
@@ -107,6 +122,10 @@ export default function Home({
 
   const filteredTrending = useMemo(() => applyFilters(trending, filters), [trending, filters]);
   const filteredTopRated = useMemo(() => applyFilters(topRated, filters), [topRated, filters]);
+  const filteredLatestReleases = useMemo(
+    () => applyFilters(latestReleases, filters),
+    [latestReleases, filters]
+  );
 
   const topTwentyMovies = useMemo(() => {
     const byId = new Map();
@@ -167,6 +186,17 @@ export default function Home({
           movies={filteredTopRated}
           onSelect={setSelected}
           emptyMessage="No top rated movies found."
+        />
+      ) : null}
+
+      {latestLoading ? <SkeletonRow title="Latest Releases" /> : null}
+      {latestError ? <SectionError message={latestError} onRetry={retryLatest} /> : null}
+      {!latestLoading && !latestError ? (
+        <MovieRowSlider
+          title="Latest Releases"
+          movies={filteredLatestReleases}
+          onSelect={setSelected}
+          emptyMessage="No latest releases found."
         />
       ) : null}
 

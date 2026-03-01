@@ -1,13 +1,13 @@
 # Ciniverse Movie App
 
 Ciniverse is a React + Vite movie discovery app powered by TMDB.  
-It includes a cinematic home page, popular movies, anime movies, search, movie detail modals, licensed in-app playback, and skeleton loaders.
+It includes a cinematic home page, trending/top/latest releases, search, movie detail modals, licensed in-app playback, shared ReelNotes, and rating counts.
 
 ## Features
 
 - Home page with:
   - Featured rotating hero
-  - Trending, Top Rated, and Popular rows
+  - Trending, Top Rated, Latest Releases, and genre rows
 - Popular page:
   - Grid of popular movies
   - `More Movies +` button to load additional pages
@@ -16,7 +16,8 @@ It includes a cinematic home page, popular movies, anime movies, search, movie d
 - Search page:
   - Search movies by title
 - Movie details modal:
-  - Overview, rating, runtime, trailer (YouTube), licensed in-app playback, and licensed provider listing
+  - Overview, runtime, trailer (YouTube), licensed in-app playback, and licensed provider listing
+  - ReelNotes: shared notes and shared rating counts
 - Global footer
 - Skeleton loading UI for smoother page loading
 
@@ -54,10 +55,14 @@ VITE_PLAYBACK_API_KEY=your_playback_api_key
 # Format: Provider Name|https://provider-url,Another Provider|https://url
 VITE_LICENSED_PROVIDERS=Netflix|https://www.netflix.com,Prime Video|https://www.primevideo.com
 
+# Community API (shared notes + rating counts)
+VITE_COMMUNITY_API_BASE_URL=http://localhost:8787
+
 ```
 
 You can use either variable. If `VITE_TMDB_BEARER_TOKEN` is set, it is used automatically.
 Full-movie playback works only from your licensed backend.
+Shared notes/ratings work from the Community API endpoint.
 
 ### Licensed playback endpoint contract
 
@@ -84,6 +89,37 @@ Notes:
 - Return `404` (or `204`) if the movie is not licensed for playback.
 - `playback.type` can be `iframe`, `hls`, `dash`, or `mp4`.
 - Your backend should enforce entitlement, region, and expiration checks before returning stream URLs.
+
+### Community API endpoint contract
+
+Start the local community API:
+
+```bash
+npm run community:api
+```
+
+Frontend reads/writes:
+
+- `GET /v1/community/:mediaType/:id`  
+- `POST /v1/community/:mediaType/:id/notes`
+- `POST /v1/community/:mediaType/:id/ratings`
+
+Example note request:
+
+```json
+{
+  "text": "This one has great pacing.",
+  "author": "ReelNotes User"
+}
+```
+
+Example rating request:
+
+```json
+{
+  "rating": 5
+}
+```
 
 3. Start development server:
 
@@ -124,10 +160,13 @@ Navigation is handled in-app via the top navbar.
 - `npm run dev` - Run local dev server
 - `npm run build` - Production build
 - `npm run preview` - Preview production build
+- `npm run community:api` - Run local shared Community API
 
 ## Folder Highlights
 
 - `src/api/tmdb.js` - TMDB request helpers and endpoints
+- `src/api/community.js` - Shared community notes + rating counts API client
+- `server/community-api.mjs` - Minimal Node API server for shared notes and ratings
 - `src/pages/` - Top-level pages (`Home`, `Popular`, `Anime`, `Search`)
 - `src/components/` - UI components (navbar, cards, modal, skeletons, footer)
 - `src/hooks/useMovies.js` - Shared async movie loading hook

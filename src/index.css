@@ -816,6 +816,11 @@ body {
   color: var(--muted);
 }
 
+.notebook-metric {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
 .star-rating {
   display: inline-flex;
   align-items: center;

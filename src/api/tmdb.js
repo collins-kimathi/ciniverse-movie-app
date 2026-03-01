@@ -47,6 +47,12 @@ export const fetchPopular = (page = 1) =>
   request(`/movie/popular?page=${page}`);
 export const fetchTopRated = (page = 1) =>
   request(`/movie/top_rated?page=${page}`);
+export const fetchLatestReleases = (page = 1) => {
+  const today = new Date().toISOString().slice(0, 10);
+  return request(
+    `/discover/movie?include_adult=false&include_video=false&sort_by=primary_release_date.desc&primary_release_date.lte=${today}&page=${page}`
+  );
+};
 export const fetchPopularShows = (page = 1) =>
   request(`/tv/popular?page=${page}`);
 export const fetchAnime = (page = 1) =>

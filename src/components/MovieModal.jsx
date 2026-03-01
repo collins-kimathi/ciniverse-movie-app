@@ -7,9 +7,9 @@ import {
   IMG_BASE,
 } from "../api/tmdb";
 import { fetchLicensedPlaybackSession, isPlaybackEnabled } from "../api/playback";
+import { fetchCommunityData, postCommunityNote, postCommunityRating } from "../api/community";
 import { licensedProviders } from "../config/licensedProviders";
 import {
-  addMovieNotebookNote,
   getContinueWatchingEntry,
   getMovieNotebookEntry,
   isInMyList,
@@ -38,6 +38,14 @@ export default function MovieModal({ movie, onClose }) {
   );
   const [noteText, setNoteText] = useState("");
   const [noteStatus, setNoteStatus] = useState("");
+  const [ratingStatus, setRatingStatus] = useState("");
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [community, setCommunity] = useState({
+    notes: [],
+    ratings: { totalRatings: 0, averageRating: 0, counts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } },
+  });
+  const [communityLoading, setCommunityLoading] = useState(false);
+  const [communityError, setCommunityError] = useState("");
   const modalRef = useRef(null);
 
   const isShow = activeMovie.mediaType === "tv";
@@ -50,6 +58,8 @@ export default function MovieModal({ movie, onClose }) {
     setNotebook(getMovieNotebookEntry(movie.id, movie.mediaType || "movie"));
     setNoteText("");
     setNoteStatus("");
+    setRatingStatus("");
+    setSelectedRating(0);
     trackEvent("open_modal", { id: movie.id, mediaType: movie.mediaType || "movie" });
   }, [movie]);
 
@@ -57,6 +67,41 @@ export default function MovieModal({ movie, onClose }) {
     setNotebook(getMovieNotebookEntry(activeMovie.id, activeMovie.mediaType || "movie"));
     setNoteText("");
     setNoteStatus("");
+    setRatingStatus("");
+    setSelectedRating(0);
+  }, [activeMovie.id, activeMovie.mediaType]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadCommunity() {
+      setCommunityLoading(true);
+      setCommunityError("");
+      try {
+        const data = await fetchCommunityData(activeMovie.id, activeMovie.mediaType || "movie");
+        if (!cancelled) {
+          setCommunity(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setCommunityError(
+            "Community data unavailable. Start the Community API to share notes and ratings."
+          );
+          setCommunity({
+            notes: [],
+            ratings: { totalRatings: 0, averageRating: 0, counts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } },
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setCommunityLoading(false);
+        }
+      }
+    }
+
+    loadCommunity();
+    return () => {
+      cancelled = true;
+    };
   }, [activeMovie.id, activeMovie.mediaType]);
 
   useEffect(() => {
@@ -214,15 +259,17 @@ export default function MovieModal({ movie, onClose }) {
   const hasPlayback = Boolean(playback?.src);
   const topCast = (details.credits?.cast || []).slice(0, 5);
   const watched = Boolean(notebook?.watched);
-  const notebookRating =
-    typeof notebook?.userRating === "number" && notebook.userRating > 0 ? notebook.userRating : 0;
+  const notebookRating = selectedRating;
   const notebookRecommendation =
     notebook?.recommendation === "recommend" ||
     notebook?.recommendation === "skip" ||
     notebook?.recommendation === "undecided"
       ? notebook.recommendation
       : "undecided";
-  const notebookNotes = Array.isArray(notebook?.notes) ? notebook.notes : [];
+  const notebookNotes = Array.isArray(community?.notes) ? community.notes : [];
+  const totalRatings = Number(community?.ratings?.totalRatings || 0);
+  const averageRating = Number(community?.ratings?.averageRating || 0);
+  const ratingCounts = community?.ratings?.counts || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
   function applyNotebookFeedback(nextPatch) {
     const updated = upsertMovieNotebookFeedback({
@@ -230,7 +277,7 @@ export default function MovieModal({ movie, onClose }) {
       mediaType: activeMovie.mediaType || "movie",
       title,
       watched: watched,
-      userRating: notebookRating,
+      userRating: null,
       recommendation: notebookRecommendation,
       ...nextPatch,
     });
@@ -355,7 +402,7 @@ export default function MovieModal({ movie, onClose }) {
     const nextWatched = event.target.checked;
     applyNotebookFeedback({
       watched: nextWatched,
-      userRating: nextWatched ? notebookRating : null,
+      userRating: null,
       recommendation: nextWatched ? notebookRecommendation : "undecided",
     });
     trackEvent("movie_notebook_watched", {
@@ -365,18 +412,34 @@ export default function MovieModal({ movie, onClose }) {
     });
   }
 
-  function onRatingChange(nextRating) {
-    const resolvedRating = notebookRating === nextRating ? null : nextRating;
-    applyNotebookFeedback({
-      watched: true,
-      userRating: Number.isFinite(resolvedRating) && resolvedRating >= 1 ? resolvedRating : null,
-      recommendation: notebookRecommendation,
-    });
-    trackEvent("movie_notebook_rating", {
-      id: activeMovie.id,
-      mediaType: activeMovie.mediaType || "movie",
-      rating: resolvedRating,
-    });
+  async function onRatingChange(nextRating) {
+    const resolvedRating = notebookRating === nextRating ? 0 : nextRating;
+    setSelectedRating(resolvedRating);
+    if (!resolvedRating) {
+      setRatingStatus("");
+      return;
+    }
+    try {
+      const data = await postCommunityRating({
+        id: activeMovie.id,
+        mediaType: activeMovie.mediaType || "movie",
+        rating: resolvedRating,
+      });
+      setCommunity(data);
+      setRatingStatus("Rating counted");
+      applyNotebookFeedback({
+        watched: true,
+        userRating: null,
+        recommendation: notebookRecommendation,
+      });
+      trackEvent("movie_rating_submitted", {
+        id: activeMovie.id,
+        mediaType: activeMovie.mediaType || "movie",
+        rating: resolvedRating,
+      });
+    } catch {
+      setRatingStatus("Rating service unavailable");
+    }
   }
 
   function onRecommendationChange(nextRecommendation) {
@@ -384,7 +447,7 @@ export default function MovieModal({ movie, onClose }) {
       notebookRecommendation === nextRecommendation ? "undecided" : nextRecommendation;
     applyNotebookFeedback({
       watched: true,
-      userRating: notebookRating,
+      userRating: null,
       recommendation: resolvedRecommendation,
     });
     trackEvent("movie_notebook_recommendation", {
@@ -394,28 +457,31 @@ export default function MovieModal({ movie, onClose }) {
     });
   }
 
-  function onAddNotebookNote(event) {
+  async function onAddNotebookNote(event) {
     event.preventDefault();
-    const note = addMovieNotebookNote({
-      id: activeMovie.id,
-      mediaType: activeMovie.mediaType || "movie",
-      title,
-      text: noteText,
-    });
-
-    if (!note) {
+    const clean = noteText.trim();
+    if (!clean) {
       setNoteStatus("Write a short note before posting.");
       return;
     }
-
-    setNotebook(getMovieNotebookEntry(activeMovie.id, activeMovie.mediaType || "movie"));
-    setNoteText("");
-    setNoteStatus("Note added");
-    trackEvent("movie_notebook_note_added", {
-      id: activeMovie.id,
-      mediaType: activeMovie.mediaType || "movie",
-      noteLength: note.text.length,
-    });
+    try {
+      const data = await postCommunityNote({
+        id: activeMovie.id,
+        mediaType: activeMovie.mediaType || "movie",
+        text: clean,
+        author: "ReelNotes User",
+      });
+      setCommunity(data);
+      setNoteText("");
+      setNoteStatus("Note posted");
+      trackEvent("movie_note_posted", {
+        id: activeMovie.id,
+        mediaType: activeMovie.mediaType || "movie",
+        noteLength: clean.length,
+      });
+    } catch {
+      setNoteStatus("Note service unavailable");
+    }
   }
 
   return (
@@ -561,15 +627,21 @@ export default function MovieModal({ movie, onClose }) {
             <section className="notebook-panel" aria-label="ReelNotes">
               <p className="status-line provider-list">ReelNotes</p>
               <p className="notebook-helper">
-                After watching the trailer, mark as watched, rate it, suggest it, and share notes.
+                Rate this title, suggest it, and post notes visible to all users.
               </p>
+              {communityLoading ? <p className="status-line">Loading community activity...</p> : null}
+              {communityError ? (
+                <p className="status-line error" aria-live="polite">
+                  {communityError}
+                </p>
+              ) : null}
               <label className="notebook-check">
                 <input type="checkbox" checked={watched} onChange={onWatchedChange} />
                 I have watched this title
               </label>
               <div className="notebook-feedback-grid">
                 <label>
-                  My Rating
+                  Rate This Title
                   <div
                     className="star-rating"
                     role="radiogroup"
@@ -593,6 +665,14 @@ export default function MovieModal({ movie, onClose }) {
                       );
                     })}
                   </div>
+                  <span className="notebook-metric">
+                    {totalRatings} ratings | Avg {averageRating ? averageRating.toFixed(1) : "0.0"} / 5
+                  </span>
+                  <span className="notebook-metric">
+                    5★ {ratingCounts[5] || 0} | 4★ {ratingCounts[4] || 0} | 3★{" "}
+                    {ratingCounts[3] || 0} | 2★ {ratingCounts[2] || 0} | 1★ {ratingCounts[1] || 0}
+                  </span>
+                  {ratingStatus ? <span className="status-inline">{ratingStatus}</span> : null}
                 </label>
                 <label>
                   Suggest This Title?
