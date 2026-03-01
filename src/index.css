@@ -478,6 +478,40 @@ body {
   transition: filter 0.25s ease, transform 0.25s ease;
 }
 
+.card-media {
+  width: 100%;
+  height: 250px;
+  background: #0b0c10;
+  position: relative;
+}
+
+.card-media img,
+.card-media iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: none;
+}
+
+.card-media iframe {
+  pointer-events: none;
+}
+
+.preview-audio-toggle {
+  position: absolute;
+  right: 0.45rem;
+  bottom: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(0, 0, 0, 0.58);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  z-index: 2;
+  cursor: pointer;
+}
+
 .card img.loading {
   filter: none;
   transform: scale(1);

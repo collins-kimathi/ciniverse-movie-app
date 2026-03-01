@@ -65,6 +65,10 @@ export const fetchMovieDetails = (id) =>
   request(`/movie/${id}?append_to_response=videos,credits`);
 export const fetchShowDetails = (id) =>
   request(`/tv/${id}?append_to_response=videos,credits`);
+export const fetchMovieVideos = (id) =>
+  request(`/movie/${id}/videos`);
+export const fetchShowVideos = (id) =>
+  request(`/tv/${id}/videos`);
 export const fetchSimilarMovies = (id) =>
   request(`/movie/${id}/similar?page=1`);
 export const fetchSimilarShows = (id) =>

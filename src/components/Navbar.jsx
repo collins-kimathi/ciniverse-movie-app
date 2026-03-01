@@ -1,8 +1,7 @@
 import SearchBar from "./SearchBar";
 import InstallButton from "./InstallButton";
 import { appConfig } from "../config/appConfig";
-import { useEffect, useState } from "react";
-import { trackEvent } from "../utils/analytics";
+import { useState } from "react";
 
 export default function Navbar({
   navigate,
@@ -18,16 +17,6 @@ export default function Navbar({
     setMobileMenuOpen(false);
   }
 
-  useEffect(() => {
-    function onKeyDown(event) {
-      if (event.key === "Escape") {
-        setMobileMenuOpen(false);
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
   return (
     <nav className="navbar">
       <button type="button" className="logo" onClick={() => go("home")}>
@@ -37,15 +26,7 @@ export default function Navbar({
         type="button"
         className="mobile-menu-toggle"
         aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-        aria-expanded={mobileMenuOpen}
-        aria-controls="primary-nav-links"
-        onClick={() =>
-          setMobileMenuOpen((prev) => {
-            const next = !prev;
-            trackEvent(next ? "mobile_menu_open" : "mobile_menu_close");
-            return next;
-          })
-        }
+        onClick={() => setMobileMenuOpen((prev) => !prev)}
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
           {mobileMenuOpen ? (
@@ -58,7 +39,7 @@ export default function Navbar({
           )}
         </svg>
       </button>
-      <div id="primary-nav-links" className={`nav-links ${mobileMenuOpen ? "mobile-open" : ""}`}>
+      <div className={`nav-links ${mobileMenuOpen ? "mobile-open" : ""}`}>
         <button
           type="button"
           className={activePage === "home" ? "active" : ""}
