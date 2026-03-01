@@ -118,6 +118,7 @@ export default function SearchBar({ onSearch }) {
             <button
               type="button"
               className="search-clear-history"
+              onPointerDown={(event) => event.preventDefault()}
               onClick={clearHistory}
               aria-label="Clear search history"
               title="Clear search history"

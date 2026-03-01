@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ciniverse.app/sitemap.xml
+Sitemap: https://ciniverse.top/sitemap.xml

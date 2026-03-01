@@ -117,7 +117,7 @@ Navigation is handled in-app via the top navbar.
 - The app uses TMDB image base path `https://image.tmdb.org/t/p/w500`.
 - Full-movie playback comes from your licensed playback backend.
 - Licensed provider badges come from `VITE_LICENSED_PROVIDERS` (or built-in defaults).
-- SEO defaults in `index.html`, `public/robots.txt`, and `public/sitemap.xml` use `https://ciniverse.app`; replace that domain if your deployed URL is different.
+- SEO defaults in `index.html`, `public/robots.txt`, and `public/sitemap.xml` use `https://ciniverse.top`; replace that domain if your deployed URL is different.
 
 ## Scripts
 
