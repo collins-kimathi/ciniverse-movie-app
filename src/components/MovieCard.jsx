@@ -138,15 +138,22 @@ export default function MovieCard({ movie, onClick }) {
             />
             <button
               type="button"
-              className="preview-audio-toggle"
+              className={`preview-audio-toggle ${previewAudioOn ? "" : "muted"}`}
               aria-label={previewAudioOn ? "Mute preview audio" : "Unmute preview audio"}
+              aria-pressed={previewAudioOn}
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 setPreviewAudioOn((current) => !current);
               }}
             >
-              {previewAudioOn ? "Mute" : "Sound"}
+              <span className="preview-audio-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M4 9h4l5-4v14l-5-4H4z" />
+                  <path d="M16.5 9.5a4 4 0 0 1 0 5" />
+                  <path d="M19 7a7 7 0 0 1 0 10" />
+                </svg>
+              </span>
             </button>
           </>
         ) : (
