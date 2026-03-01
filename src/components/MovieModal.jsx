@@ -9,10 +9,13 @@ import {
 import { fetchLicensedPlaybackSession, isPlaybackEnabled } from "../api/playback";
 import { licensedProviders } from "../config/licensedProviders";
 import {
+  addMovieNotebookNote,
   getContinueWatchingEntry,
+  getMovieNotebookEntry,
   isInMyList,
   toggleMyList,
   upsertContinueWatching,
+  upsertMovieNotebookFeedback,
 } from "../utils/library";
 import { trackEvent } from "../utils/analytics";
 import { uiLabels } from "../config/appConfig";
@@ -30,6 +33,11 @@ export default function MovieModal({ movie, onClose }) {
   const [saved, setSaved] = useState(isInMyList(movie.id));
   const [shareStatus, setShareStatus] = useState("");
   const [resumePoint, setResumePoint] = useState(0);
+  const [notebook, setNotebook] = useState(
+    getMovieNotebookEntry(movie.id, movie.mediaType || "movie")
+  );
+  const [noteText, setNoteText] = useState("");
+  const [noteStatus, setNoteStatus] = useState("");
   const modalRef = useRef(null);
 
   const isShow = activeMovie.mediaType === "tv";
@@ -39,8 +47,17 @@ export default function MovieModal({ movie, onClose }) {
     setSaved(isInMyList(movie.id));
     const resumeEntry = getContinueWatchingEntry(movie.id, movie.mediaType || "movie");
     setResumePoint(Number(resumeEntry?.resumeSeconds || 0));
+    setNotebook(getMovieNotebookEntry(movie.id, movie.mediaType || "movie"));
+    setNoteText("");
+    setNoteStatus("");
     trackEvent("open_modal", { id: movie.id, mediaType: movie.mediaType || "movie" });
   }, [movie]);
+
+  useEffect(() => {
+    setNotebook(getMovieNotebookEntry(activeMovie.id, activeMovie.mediaType || "movie"));
+    setNoteText("");
+    setNoteStatus("");
+  }, [activeMovie.id, activeMovie.mediaType]);
 
   useEffect(() => {
     let cancelled = false;
@@ -196,6 +213,29 @@ export default function MovieModal({ movie, onClose }) {
       : "Unknown runtime";
   const hasPlayback = Boolean(playback?.src);
   const topCast = (details.credits?.cast || []).slice(0, 5);
+  const watched = Boolean(notebook?.watched);
+  const notebookRating =
+    typeof notebook?.userRating === "number" && notebook.userRating > 0 ? notebook.userRating : "";
+  const notebookRecommendation =
+    notebook?.recommendation === "recommend" ||
+    notebook?.recommendation === "skip" ||
+    notebook?.recommendation === "undecided"
+      ? notebook.recommendation
+      : "undecided";
+  const notebookNotes = Array.isArray(notebook?.notes) ? notebook.notes : [];
+
+  function applyNotebookFeedback(nextPatch) {
+    const updated = upsertMovieNotebookFeedback({
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      title,
+      watched: watched,
+      userRating: notebookRating,
+      recommendation: notebookRecommendation,
+      ...nextPatch,
+    });
+    setNotebook(updated);
+  }
 
   async function onWatchFullMovie() {
     if (showFullMovie && hasPlayback) {
@@ -311,6 +351,72 @@ export default function MovieModal({ movie, onClose }) {
     }
   }
 
+  function onWatchedChange(event) {
+    const nextWatched = event.target.checked;
+    applyNotebookFeedback({
+      watched: nextWatched,
+      userRating: nextWatched ? notebookRating : null,
+      recommendation: nextWatched ? notebookRecommendation : "undecided",
+    });
+    trackEvent("movie_notebook_watched", {
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      watched: nextWatched,
+    });
+  }
+
+  function onRatingChange(event) {
+    const nextRating = Number(event.target.value);
+    applyNotebookFeedback({
+      watched: true,
+      userRating: Number.isFinite(nextRating) && nextRating >= 1 ? nextRating : null,
+      recommendation: notebookRecommendation,
+    });
+    trackEvent("movie_notebook_rating", {
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      rating: nextRating,
+    });
+  }
+
+  function onRecommendationChange(event) {
+    const nextRecommendation = event.target.value;
+    applyNotebookFeedback({
+      watched: true,
+      userRating: notebookRating,
+      recommendation: nextRecommendation,
+    });
+    trackEvent("movie_notebook_recommendation", {
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      recommendation: nextRecommendation,
+    });
+  }
+
+  function onAddNotebookNote(event) {
+    event.preventDefault();
+    const note = addMovieNotebookNote({
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      title,
+      text: noteText,
+    });
+
+    if (!note) {
+      setNoteStatus("Write a short note before posting.");
+      return;
+    }
+
+    setNotebook(getMovieNotebookEntry(activeMovie.id, activeMovie.mediaType || "movie"));
+    setNoteText("");
+    setNoteStatus("Note added");
+    trackEvent("movie_notebook_note_added", {
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      noteLength: note.text.length,
+    });
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
@@ -342,6 +448,76 @@ export default function MovieModal({ movie, onClose }) {
               Rating: {rating} | {year} | {runtime}
             </p>
             <p>{details.overview || "No overview available."}</p>
+            <section className="notebook-panel" aria-label="Movie notebook">
+              <p className="status-line provider-list">Movie Notebook</p>
+              <p className="notebook-helper">
+                Mark as watched, rate it, suggest it, and add notes for other visitors to read.
+              </p>
+              <label className="notebook-check">
+                <input type="checkbox" checked={watched} onChange={onWatchedChange} />
+                I have watched this title
+              </label>
+              <div className="notebook-feedback-grid">
+                <label>
+                  My Rating (1-10)
+                  <select value={notebookRating} onChange={onRatingChange} disabled={!watched}>
+                    <option value="">Choose</option>
+                    {Array.from({ length: 10 }, (_, index) => index + 1).map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Suggest This Title?
+                  <select
+                    value={notebookRecommendation}
+                    onChange={onRecommendationChange}
+                    disabled={!watched}
+                  >
+                    <option value="undecided">Undecided</option>
+                    <option value="recommend">Yes, suggest it</option>
+                    <option value="skip">No, skip it</option>
+                  </select>
+                </label>
+              </div>
+              <form className="notebook-note-form" onSubmit={onAddNotebookNote}>
+                <textarea
+                  value={noteText}
+                  onChange={(event) => {
+                    setNoteText(event.target.value);
+                    if (noteStatus) {
+                      setNoteStatus("");
+                    }
+                  }}
+                  placeholder={`Add a note about ${title}`}
+                  maxLength={500}
+                  rows={3}
+                />
+                <div className="notebook-note-actions">
+                  <button type="submit" className="row-more-btn">
+                    Post Note
+                  </button>
+                  {noteStatus ? <span className="status-inline">{noteStatus}</span> : null}
+                </div>
+              </form>
+              <div className="notebook-notes">
+                {notebookNotes.length ? (
+                  notebookNotes.map((note) => (
+                    <article key={note.id} className="notebook-note">
+                      <p>{note.text}</p>
+                      <span>
+                        {note.author || "Movie Notebook User"} |{" "}
+                        {new Date(note.createdAt).toLocaleDateString()}
+                      </span>
+                    </article>
+                  ))
+                ) : (
+                  <p className="status-line">No notes yet. Be the first to add one.</p>
+                )}
+              </div>
+            </section>
             {topCast.length ? (
               <div className="cast-block">
                 <p className="status-line provider-list">Top Cast</p>

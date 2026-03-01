@@ -206,8 +206,8 @@ export default function SearchBar({ onSearch }) {
           onFocus={() => setFocused(true)}
           onBlur={() => window.setTimeout(() => setFocused(false), 120)}
           onKeyDown={onInputKeyDown}
-          placeholder="Search movies"
-          aria-label="Search movies"
+          placeholder="Search movies, trailers, notes"
+          aria-label="Search movies, trailers, notes"
           aria-haspopup="listbox"
           aria-expanded={focused && suggestionItems.length > 0}
           aria-controls="movie-search-suggestions"
