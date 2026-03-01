@@ -235,6 +235,11 @@ body {
   cursor: pointer;
 }
 
+.search-suggestion[aria-selected="true"] {
+  background: rgba(229, 9, 20, 0.2);
+  border: 1px solid rgba(229, 9, 20, 0.4);
+}
+
 .search-suggestion:hover {
   background: rgba(255, 255, 255, 0.08);
 }
@@ -542,6 +547,82 @@ body {
   margin: 0.55rem 0 1.1rem;
 }
 
+.my-list-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.my-list-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.my-list-filter {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.33rem 0.75rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.my-list-filter.active {
+  color: var(--text);
+  border-color: rgba(229, 9, 20, 0.45);
+  background: rgba(229, 9, 20, 0.2);
+}
+
+.my-list-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.my-list-sort-label {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.my-list-actions select,
+.list-card-meta select {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  padding: 0.28rem 0.55rem;
+}
+
+.list-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.list-card-open {
+  border: none;
+  padding: 0;
+  width: 100%;
+  display: block;
+  background: transparent;
+  cursor: pointer;
+}
+
+.list-card-meta {
+  margin-top: 0.45rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.list-card-meta label {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
 .status-inline {
   color: var(--muted);
   font-size: 0.85rem;
@@ -735,6 +816,14 @@ body {
 
 .provider-chip--link:hover {
   background: rgba(255, 255, 255, 0.18);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(229, 9, 20, 0.8);
+  outline-offset: 2px;
 }
 
 .cast-block ul {

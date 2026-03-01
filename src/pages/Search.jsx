@@ -5,6 +5,7 @@ import MovieModal from "../components/MovieModal";
 import SkeletonGrid from "../components/SkeletonGrid";
 import SectionError from "../components/SectionError";
 import useMovies from "../hooks/useMovies";
+import { trackEvent } from "../utils/analytics";
 
 export default function Search({ query, watchTarget = null, onConsumeWatchTarget = () => {} }) {
   const [selected, setSelected] = useState(null);
@@ -29,6 +30,16 @@ export default function Search({ query, watchTarget = null, onConsumeWatchTarget
     setSelected({ id: watchTarget.id, mediaType: watchTarget.mediaType });
     onConsumeWatchTarget();
   }, [watchTarget, onConsumeWatchTarget]);
+
+  useEffect(() => {
+    if (!cleanQuery || loading || error) {
+      return;
+    }
+    trackEvent("search_results_loaded", {
+      query: cleanQuery,
+      count: results.length,
+    });
+  }, [cleanQuery, loading, error, results.length]);
 
   return (
     <main className="main">

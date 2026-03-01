@@ -59,6 +59,8 @@ export const fetchByGenre = (genreId, page = 1) =>
   );
 export const searchMovies = (query) =>
   request(`/search/movie?query=${encodeURIComponent(query)}`);
+export const searchMovieSuggestions = (query) =>
+  request(`/search/movie?include_adult=false&page=1&query=${encodeURIComponent(query)}`);
 export const fetchMovieDetails = (id) =>
   request(`/movie/${id}?append_to_response=videos,credits`);
 export const fetchShowDetails = (id) =>

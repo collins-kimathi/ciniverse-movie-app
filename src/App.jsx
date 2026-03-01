@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Home from "./pages/Home";
-import Popular from "./pages/Popular";
-import Anime from "./pages/Anime";
-import Shows from "./pages/Shows";
-import GenreDetail from "./pages/GenreDetail";
-import MyList from "./pages/MyList";
-import Search from "./pages/Search";
 import { trackEvent } from "./utils/analytics";
 import { GENRE_SECTIONS } from "./config/genres";
 import { appConfig } from "./config/appConfig";
+
+const HomePage = lazy(() => import("./pages/Home"));
+const PopularPage = lazy(() => import("./pages/Popular"));
+const AnimePage = lazy(() => import("./pages/Anime"));
+const ShowsPage = lazy(() => import("./pages/Shows"));
+const GenreDetailPage = lazy(() => import("./pages/GenreDetail"));
+const MyListPage = lazy(() => import("./pages/MyList"));
+const SearchPage = lazy(() => import("./pages/Search"));
 
 export default function App() {
   const [page, setPage] = useState("home");
@@ -85,6 +86,80 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const baseUrl = (appConfig.siteUrl || "https://ciniverse.top").replace(/\/$/, "");
+    const searchPart = searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : "";
+    const pathByPage = {
+      home: "/home",
+      popular: "/popular",
+      shows: "/shows",
+      anime: "/anime",
+      "my-list": "/my-list",
+      search: `/search${searchPart}`,
+      genre: selectedGenre ? `/genre/${selectedGenre.genreId}` : "/home",
+    };
+    const titleByPage = {
+      home: "Ciniverse | Discover Movies & Watch Licensed Streams",
+      popular: "Popular Movies | Ciniverse",
+      shows: "Popular Shows | Ciniverse",
+      anime: "Anime Movies | Ciniverse",
+      "my-list": "My List | Ciniverse",
+      search: searchQuery ? `Search: ${searchQuery} | Ciniverse` : "Search | Ciniverse",
+      genre: selectedGenre ? `${selectedGenre.title} Movies | Ciniverse` : "Genre Movies | Ciniverse",
+    };
+    const descByPage = {
+      home:
+        "Ciniverse helps you discover trending movies, watch trailers, and access licensed streaming options in one cinematic experience.",
+      popular: "Explore popular movies trending worldwide on Ciniverse.",
+      shows: "Discover popular TV shows and start watching on Ciniverse.",
+      anime: "Browse top anime movies and discover your next favorite on Ciniverse.",
+      "my-list": "Manage your saved movies and shows on Ciniverse.",
+      search: searchQuery
+        ? `Search results for ${searchQuery} on Ciniverse.`
+        : "Search movies and shows on Ciniverse.",
+      genre: selectedGenre
+        ? `Explore ${selectedGenre.title} movies on Ciniverse.`
+        : "Explore movies by genre on Ciniverse.",
+    };
+
+    const path = pathByPage[page] || "/home";
+    const title = titleByPage[page] || titleByPage.home;
+    const description = descByPage[page] || descByPage.home;
+    const absoluteUrl = `${baseUrl}${path}`;
+
+    document.title = title;
+    const descriptionMeta = document.querySelector("meta[name='description']");
+    if (descriptionMeta) {
+      descriptionMeta.setAttribute("content", description);
+    }
+    const ogTitle = document.querySelector("meta[property='og:title']");
+    if (ogTitle) {
+      ogTitle.setAttribute("content", title);
+    }
+    const ogDescription = document.querySelector("meta[property='og:description']");
+    if (ogDescription) {
+      ogDescription.setAttribute("content", description);
+    }
+    const ogUrl = document.querySelector("meta[property='og:url']");
+    if (ogUrl) {
+      ogUrl.setAttribute("content", absoluteUrl);
+    }
+    const twitterTitle = document.querySelector("meta[name='twitter:title']");
+    if (twitterTitle) {
+      twitterTitle.setAttribute("content", title);
+    }
+    const twitterDescription = document.querySelector("meta[name='twitter:description']");
+    if (twitterDescription) {
+      twitterDescription.setAttribute("content", description);
+    }
+    const canonical = document.querySelector("link[rel='canonical']");
+    if (canonical) {
+      canonical.setAttribute("href", absoluteUrl);
+    }
+
+    trackEvent("page_view", { page, path });
+  }, [page, searchQuery, selectedGenre]);
+
   // Switch between top-level app pages.
   const navigate = (nextPage) => {
     window.history.pushState({}, "", `/${nextPage}`);
@@ -127,48 +202,56 @@ export default function App() {
         canInstall={appConfig.installEnabled && Boolean(installEvent)}
         onInstall={onInstall}
       />
-      {page === "home" && (
-        <Home
-          watchTarget={watchTarget}
-          onConsumeWatchTarget={() => setWatchTarget(null)}
-          onOpenGenre={(genre) => {
-            window.history.pushState(
-              {},
-              "",
-              `/genre/${genre.genreId}?title=${encodeURIComponent(genre.title)}`
-            );
-            parseRoute();
-            trackEvent("open_genre", genre);
-          }}
-        />
-      )}
-      {page === "popular" && (
-        <Popular watchTarget={watchTarget} onConsumeWatchTarget={() => setWatchTarget(null)} />
-      )}
-      {page === "shows" && (
-        <Shows watchTarget={watchTarget} onConsumeWatchTarget={() => setWatchTarget(null)} />
-      )}
-      {page === "anime" && (
-        <Anime watchTarget={watchTarget} onConsumeWatchTarget={() => setWatchTarget(null)} />
-      )}
-      {page === "my-list" && (
-        <MyList watchTarget={watchTarget} onConsumeWatchTarget={() => setWatchTarget(null)} />
-      )}
-      {page === "genre" && selectedGenre ? (
-        <GenreDetail
-          genreTitle={selectedGenre.title}
-          genreId={selectedGenre.genreId}
-          watchTarget={watchTarget}
-          onConsumeWatchTarget={() => setWatchTarget(null)}
-        />
-      ) : null}
-      {page === "search" && (
-        <Search
-          query={searchQuery}
-          watchTarget={watchTarget}
-          onConsumeWatchTarget={() => setWatchTarget(null)}
-        />
-      )}
+      <Suspense
+        fallback={
+          <main className="main">
+            <p className="status-line">Loading page...</p>
+          </main>
+        }
+      >
+        {page === "home" && (
+          <HomePage
+            watchTarget={watchTarget}
+            onConsumeWatchTarget={() => setWatchTarget(null)}
+            onOpenGenre={(genre) => {
+              window.history.pushState(
+                {},
+                "",
+                `/genre/${genre.genreId}?title=${encodeURIComponent(genre.title)}`
+              );
+              parseRoute();
+              trackEvent("open_genre", genre);
+            }}
+          />
+        )}
+        {page === "popular" && (
+          <PopularPage watchTarget={watchTarget} onConsumeWatchTarget={() => setWatchTarget(null)} />
+        )}
+        {page === "shows" && (
+          <ShowsPage watchTarget={watchTarget} onConsumeWatchTarget={() => setWatchTarget(null)} />
+        )}
+        {page === "anime" && (
+          <AnimePage watchTarget={watchTarget} onConsumeWatchTarget={() => setWatchTarget(null)} />
+        )}
+        {page === "my-list" && (
+          <MyListPage watchTarget={watchTarget} onConsumeWatchTarget={() => setWatchTarget(null)} />
+        )}
+        {page === "genre" && selectedGenre ? (
+          <GenreDetailPage
+            genreTitle={selectedGenre.title}
+            genreId={selectedGenre.genreId}
+            watchTarget={watchTarget}
+            onConsumeWatchTarget={() => setWatchTarget(null)}
+          />
+        ) : null}
+        {page === "search" && (
+          <SearchPage
+            query={searchQuery}
+            watchTarget={watchTarget}
+            onConsumeWatchTarget={() => setWatchTarget(null)}
+          />
+        )}
+      </Suspense>
       <Footer />
     </div>
   );

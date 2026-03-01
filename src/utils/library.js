@@ -1,6 +1,7 @@
 const MY_LIST_KEY = "ciniverse.my_list";
 const CONTINUE_WATCHING_KEY = "ciniverse.continue_watching";
 const RECENT_SEARCHES_KEY = "ciniverse.recent_searches";
+const LIST_CATEGORY_VALUES = ["watch-soon", "favorites", "completed"];
 
 function readJson(key, fallback) {
   try {
@@ -24,7 +25,10 @@ function writeJson(key, value) {
 }
 
 export function readMyList() {
-  return readJson(MY_LIST_KEY, []);
+  return readJson(MY_LIST_KEY, []).map((item) => ({
+    ...item,
+    category: LIST_CATEGORY_VALUES.includes(item?.category) ? item.category : "watch-soon",
+  }));
 }
 
 export function isInMyList(id) {
@@ -36,9 +40,20 @@ export function toggleMyList(item) {
   const exists = list.some((entry) => entry.id === item.id && entry.mediaType === item.mediaType);
   const next = exists
     ? list.filter((entry) => !(entry.id === item.id && entry.mediaType === item.mediaType))
-    : [{ ...item, savedAt: new Date().toISOString() }, ...list];
+    : [{ ...item, category: "watch-soon", savedAt: new Date().toISOString() }, ...list];
   writeJson(MY_LIST_KEY, next.slice(0, 200));
   return !exists;
+}
+
+export function updateMyListCategory(id, mediaType, category) {
+  const nextCategory = LIST_CATEGORY_VALUES.includes(category) ? category : "watch-soon";
+  const list = readMyList();
+  const next = list.map((item) =>
+    item.id === id && (item.mediaType || "movie") === (mediaType || "movie")
+      ? { ...item, category: nextCategory }
+      : item
+  );
+  writeJson(MY_LIST_KEY, next);
 }
 
 export function readContinueWatching() {
