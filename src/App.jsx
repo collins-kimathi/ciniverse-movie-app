@@ -94,10 +94,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const baseUrl = (appConfig.siteUrl || "https://ciniverse.top").replace(
-      /\/$/,
-      "",
-    );
+    const baseUrl = (
+      appConfig.siteUrl || "https://ciniverse-movie-app.vercel.app"
+    ).replace(/\/$/, "");
     const searchPart = searchQuery
       ? `?q=${encodeURIComponent(searchQuery)}`
       : "";
@@ -111,7 +110,7 @@ export default function App() {
       genre: selectedGenre ? `/genre/${selectedGenre.genreId}` : "/home",
     };
     const titleByPage = {
-      home: "Ciniverse ",
+      home: "Ciniverse",
       popular: "Popular Movies | Ciniverse",
       shows: "Popular Shows | Ciniverse",
       anime: "Anime Movies | Ciniverse",

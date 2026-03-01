@@ -55,14 +55,19 @@ VITE_PLAYBACK_API_KEY=your_playback_api_key
 # Format: Provider Name|https://provider-url,Another Provider|https://url
 VITE_LICENSED_PROVIDERS=Netflix|https://www.netflix.com,Prime Video|https://www.primevideo.com
 
-# Community API (shared notes + rating counts)
-VITE_COMMUNITY_API_BASE_URL=http://localhost:8787
+# Community API (optional override). If empty, frontend calls same-origin /api routes.
+# VITE_COMMUNITY_API_BASE_URL=https://your-api-domain.com
+
+# Optional persistent store for Vercel /api community endpoints (recommended in production)
+# You can use Vercel KV or Upstash Redis REST credentials
+KV_REST_API_URL=your_kv_rest_api_url
+KV_REST_API_TOKEN=your_kv_rest_api_token
 
 ```
 
 You can use either variable. If `VITE_TMDB_BEARER_TOKEN` is set, it is used automatically.
 Full-movie playback works only from your licensed backend.
-Shared notes/ratings work from the Community API endpoint.
+Shared notes/ratings work from the Community API endpoints.
 
 ### Licensed playback endpoint contract
 
@@ -90,19 +95,13 @@ Notes:
 - `playback.type` can be `iframe`, `hls`, `dash`, or `mp4`.
 - Your backend should enforce entitlement, region, and expiration checks before returning stream URLs.
 
-### Community API endpoint contract
+### Community API endpoint contract (Vercel /api)
 
-Start the local community API:
+Frontend reads/writes (same origin by default):
 
-```bash
-npm run community:api
-```
-
-Frontend reads/writes:
-
-- `GET /v1/community/:mediaType/:id`  
-- `POST /v1/community/:mediaType/:id/notes`
-- `POST /v1/community/:mediaType/:id/ratings`
+- `GET /api/v1/community/:mediaType/:id`
+- `POST /api/v1/community/:mediaType/:id/notes`
+- `POST /api/v1/community/:mediaType/:id/ratings`
 
 Example note request:
 
@@ -153,7 +152,8 @@ Navigation is handled in-app via the top navbar.
 - The app uses TMDB image base path `https://image.tmdb.org/t/p/w500`.
 - Full-movie playback comes from your licensed playback backend.
 - Licensed provider badges come from `VITE_LICENSED_PROVIDERS` (or built-in defaults).
-- SEO defaults in `index.html`, `public/robots.txt`, and `public/sitemap.xml` use `https://ciniverse.top`; replace that domain if your deployed URL is different.
+- SEO defaults in `index.html`, `public/robots.txt`, and `public/sitemap.xml` are set to `https://ciniverse-movie-app.vercel.app`.
+- For production shared community data, configure `KV_REST_API_URL` and `KV_REST_API_TOKEN`. Without them, Vercel /api uses in-memory fallback (not durable).
 
 ## Scripts
 
@@ -166,6 +166,8 @@ Navigation is handled in-app via the top navbar.
 
 - `src/api/tmdb.js` - TMDB request helpers and endpoints
 - `src/api/community.js` - Shared community notes + rating counts API client
+- `api/v1/community/` - Vercel serverless routes for shared notes/ratings
+- `api/_lib/communityStore.js` - Shared store adapter (KV/Upstash or in-memory fallback)
 - `server/community-api.mjs` - Minimal Node API server for shared notes and ratings
 - `src/pages/` - Top-level pages (`Home`, `Popular`, `Anime`, `Search`)
 - `src/components/` - UI components (navbar, cards, modal, skeletons, footer)

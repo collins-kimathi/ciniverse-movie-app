@@ -1,6 +1,7 @@
-const COMMUNITY_API_BASE_URL = (
-  import.meta.env.VITE_COMMUNITY_API_BASE_URL || "http://localhost:8787"
-).replace(/\/$/, "");
+const COMMUNITY_API_BASE_URL = (import.meta.env.VITE_COMMUNITY_API_BASE_URL || "").replace(
+  /\/$/,
+  ""
+);
 
 function toNumberMap(value) {
   const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -29,7 +30,8 @@ function normalizeCommunityPayload(payload) {
 }
 
 async function request(path, options = {}) {
-  const response = await fetch(`${COMMUNITY_API_BASE_URL}${path}`, {
+  const url = COMMUNITY_API_BASE_URL ? `${COMMUNITY_API_BASE_URL}${path}` : path;
+  const response = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {}),
@@ -64,4 +66,3 @@ export async function postCommunityRating({ id, mediaType = "movie", rating }) {
   });
   return normalizeCommunityPayload(payload);
 }
-

@@ -84,7 +84,7 @@ export default function MovieModal({ movie, onClose }) {
       } catch {
         if (!cancelled) {
           setCommunityError(
-            "Community data unavailable. Start the Community API to share notes and ratings."
+            "Community data is unavailable right now. Please try again shortly."
           );
           setCommunity({
             notes: [],

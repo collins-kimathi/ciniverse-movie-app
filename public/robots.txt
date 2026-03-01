@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ciniverse.top/sitemap.xml
+Sitemap: https://ciniverse-movie-app.vercel.app/sitemap.xml
