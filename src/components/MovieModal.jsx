@@ -437,8 +437,8 @@ export default function MovieModal({ movie, onClose }) {
         mediaType: activeMovie.mediaType || "movie",
         rating: resolvedRating,
       });
-    } catch {
-      setRatingStatus("Rating service unavailable");
+    } catch (error) {
+      setRatingStatus(error?.message || "Rating service unavailable");
     }
   }
 
@@ -479,8 +479,8 @@ export default function MovieModal({ movie, onClose }) {
         mediaType: activeMovie.mediaType || "movie",
         noteLength: clean.length,
       });
-    } catch {
-      setNoteStatus("Note service unavailable");
+    } catch (error) {
+      setNoteStatus(error?.message || "Note service unavailable");
     }
   }
 
