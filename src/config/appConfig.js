@@ -1,3 +1,4 @@
+// App configuration values for appConfig.
 const env = import.meta.env || {};
 
 export const appConfig = {

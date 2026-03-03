@@ -1,3 +1,4 @@
+// Utility helpers for library.
 const MY_LIST_KEY = "ciniverse.my_list";
 const CONTINUE_WATCHING_KEY = "ciniverse.continue_watching";
 const RECENT_SEARCHES_KEY = "ciniverse.recent_searches";

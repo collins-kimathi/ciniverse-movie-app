@@ -1,3 +1,4 @@
+// App configuration values for licensedProviders.
 const DEFAULT_LICENSED_PROVIDERS = [
   { name: "Netflix", url: "https://www.netflix.com" },
   { name: "Prime Video", url: "https://www.primevideo.com" },

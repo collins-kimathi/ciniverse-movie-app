@@ -1,3 +1,4 @@
+// Automated tests for library.test behavior.
 import test from "node:test";
 import assert from "node:assert/strict";
 import {

@@ -1,3 +1,4 @@
+// Shared server-side store helpers for community data.
 const DEFAULT_COUNTS = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
 function keyOf(mediaType, id) {

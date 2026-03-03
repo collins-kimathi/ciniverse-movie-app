@@ -1,3 +1,4 @@
+// Frontend API client helpers for community.
 const COMMUNITY_API_BASE_URL = (import.meta.env.VITE_COMMUNITY_API_BASE_URL || "").replace(
   /\/$/,
   ""

@@ -1,3 +1,4 @@
+// Custom React hook: useMovies.
 import { useEffect, useState } from "react";
 
 export default function useMovies(loader, deps = [], options = {}) {

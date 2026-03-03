@@ -1,3 +1,4 @@
+// Serverless community endpoint handler for [id].
 import { readEntry, toPublicEntry } from "../../../../_lib/communityStore.js";
 
 function withCors(res) {

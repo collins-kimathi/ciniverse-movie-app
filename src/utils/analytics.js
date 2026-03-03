@@ -1,3 +1,4 @@
+// Utility helpers for analytics.
 import { appConfig } from "../config/appConfig";
 
 const EVENTS_KEY = "ciniverse.analytics_events";

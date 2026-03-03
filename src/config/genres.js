@@ -1,3 +1,4 @@
+// App configuration values for genres.
 export const GENRE_SECTIONS = [
   { key: "action", title: "Action Hits", genreId: 28, emptyMessage: "No action movies found." },
   {

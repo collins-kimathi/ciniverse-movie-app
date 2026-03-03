@@ -1,3 +1,4 @@
+// Utility helpers for filters.
 export function applyFilters(movies, filters) {
   return movies.filter((movie) => {
     const release = movie.release_date || movie.first_air_date || "";

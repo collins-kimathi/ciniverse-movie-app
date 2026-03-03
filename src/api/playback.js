@@ -1,3 +1,4 @@
+// Frontend API client helpers for playback.
 const PLAYBACK_API_BASE_URL = import.meta.env.VITE_PLAYBACK_API_BASE_URL || "";
 const PLAYBACK_API_KEY = import.meta.env.VITE_PLAYBACK_API_KEY || "";
 

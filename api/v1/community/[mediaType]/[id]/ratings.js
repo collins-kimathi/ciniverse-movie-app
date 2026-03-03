@@ -1,3 +1,4 @@
+// Serverless community endpoint handler for ratings.
 import { readEntry, toPublicEntry, writeEntry } from "../../../../../_lib/communityStore.js";
 
 function withCors(res) {

@@ -1,3 +1,4 @@
+// Automated tests for smoke.test behavior.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { appConfig, uiLabels } from "../src/config/appConfig.js";
