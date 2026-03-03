@@ -1,3 +1,4 @@
+// UI component: Navbar.
 import SearchBar from "./SearchBar";
 import InstallButton from "./InstallButton";
 import { appConfig } from "../config/appConfig";
@@ -12,6 +13,7 @@ export default function Navbar({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Keep navigation behavior consistent between desktop and mobile menu states.
   function go(nextPage) {
     navigate(nextPage);
     setMobileMenuOpen(false);

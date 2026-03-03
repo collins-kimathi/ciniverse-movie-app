@@ -1,3 +1,4 @@
+// UI component: SkeletonRow.
 export default function SkeletonRow({ title = "Loading..." }) {
   return (
     <section className="rail-section" aria-label="Loading movie row">

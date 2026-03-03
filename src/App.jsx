@@ -1,3 +1,4 @@
+// Root application component and route-level orchestration.
 import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";

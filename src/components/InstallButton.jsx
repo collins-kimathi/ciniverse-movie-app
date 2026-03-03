@@ -1,4 +1,6 @@
+// UI component: InstallButton.
 export default function InstallButton({ canInstall, onInstall }) {
+  // Hide install CTA when browser/PWA install prompt is unavailable.
   if (!canInstall) {
     return null;
   }

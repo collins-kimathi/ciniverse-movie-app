@@ -1,3 +1,4 @@
+// UI component: SkeletonGrid.
 function SkeletonCard() {
   return (
     <div className="card skeleton-card" aria-hidden="true">

@@ -1,3 +1,4 @@
+// UI component: SectionError.
 export default function SectionError({ message, onRetry }) {
   return (
     <div className="section-error">

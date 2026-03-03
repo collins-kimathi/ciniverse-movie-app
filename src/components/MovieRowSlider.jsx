@@ -1,3 +1,4 @@
+// UI component: MovieRowSlider.
 import { useEffect, useRef, useState } from "react";
 import MovieCard from "./MovieCard";
 

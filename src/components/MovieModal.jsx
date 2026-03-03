@@ -1,3 +1,4 @@
+// UI component: MovieModal.
 import { useEffect, useRef, useState } from "react";
 import {
   fetchMovieDetails,

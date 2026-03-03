@@ -1,7 +1,9 @@
+// UI component: MovieCard.
 import { useEffect, useRef, useState } from "react";
 import { fetchMovieVideos, fetchShowVideos, IMG_BASE } from "../api/tmdb";
 import { fetchLicensedPlaybackSession, isPlaybackEnabled } from "../api/playback";
 
+// In-memory caches reduce repeated API calls while users browse rows/cards.
 const availabilityCache = new Map();
 const trailerCache = new Map();
 
@@ -35,6 +37,7 @@ export default function MovieCard({ movie, onClick }) {
     if (!isPlaybackEnabled) {
       return undefined;
     }
+    // Reuse known availability so each title is checked only once per session.
     if (availabilityCache.has(movie.id)) {
       setLicensed(availabilityCache.get(movie.id));
       return undefined;
@@ -61,6 +64,7 @@ export default function MovieCard({ movie, onClick }) {
 
   async function ensureTrailerKey() {
     const cacheKey = `${mediaType}:${movie.id}`;
+    // Trailer lookup can be expensive; cache youtube key by media type + id.
     if (trailerCache.has(cacheKey)) {
       setTrailerKey(trailerCache.get(cacheKey));
       return;
@@ -88,6 +92,7 @@ export default function MovieCard({ movie, onClick }) {
     if (trailerKey === undefined) {
       ensureTrailerKey();
     }
+    // Small hover delay prevents accidental iframe loads when cursor passes over cards.
     hoverIntentTimerRef.current = window.setTimeout(() => {
       setPreviewActive(true);
     }, 420);

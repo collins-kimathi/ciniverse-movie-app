@@ -1,3 +1,4 @@
+// UI component: HeroFeatured.
 export default function HeroFeatured({ movie, onPlay, rotateMs, tick }) {
   const heroBackgroundPath = movie?.backdrop_path || movie?.poster_path || "";
   const heroBackground = heroBackgroundPath

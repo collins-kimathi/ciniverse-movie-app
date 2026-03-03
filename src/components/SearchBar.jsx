@@ -1,3 +1,4 @@
+// UI component: SearchBar.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { searchMovieSuggestions } from "../api/tmdb";
 import { clearRecentSearches, pushRecentSearch, readRecentSearches } from "../utils/library";
