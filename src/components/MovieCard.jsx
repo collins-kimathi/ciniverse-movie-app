@@ -18,11 +18,13 @@ export default function MovieCard({ movie, onClick }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [previewActive, setPreviewActive] = useState(false);
   const [previewAudioOn, setPreviewAudioOn] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const [trailerKey, setTrailerKey] = useState(trailerCache.get(`${mediaType}:${movie.id}`));
   const hoverIntentTimerRef = useRef(null);
 
   useEffect(() => {
     setImageLoaded(false);
+    setIsHovering(false);
     setPreviewActive(false);
     setPreviewAudioOn(false);
     setTrailerKey(trailerCache.get(`${mediaType}:${movie.id}`));
@@ -81,6 +83,7 @@ export default function MovieCard({ movie, onClick }) {
 
   function startPreview() {
     window.clearTimeout(hoverIntentTimerRef.current);
+    setIsHovering(true);
     setPreviewAudioOn(false);
     if (trailerKey === undefined) {
       ensureTrailerKey();
@@ -92,6 +95,7 @@ export default function MovieCard({ movie, onClick }) {
 
   function stopPreview() {
     window.clearTimeout(hoverIntentTimerRef.current);
+    setIsHovering(false);
     setPreviewActive(false);
     setPreviewAudioOn(false);
   }
@@ -109,11 +113,14 @@ export default function MovieCard({ movie, onClick }) {
         previewAudioOn ? 0 : 1
       }&controls=${previewAudioOn ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&loop=1&playlist=${trailerKey}`
     : "";
+  const cardClassName = `card${isHovering ? " is-hovered" : ""}${
+    showTrailerPreview ? " is-previewing" : ""
+  }`;
 
   return (
     <button
       type="button"
-      className="card"
+      className={cardClassName}
       onClick={() => onClick(movie)}
       onMouseEnter={startPreview}
       onMouseLeave={stopPreview}
@@ -138,7 +145,7 @@ export default function MovieCard({ movie, onClick }) {
             />
             <button
               type="button"
-              className={`preview-audio-toggle ${previewAudioOn ? "" : "muted"}`}
+              className={`preview-audio-toggle ${previewAudioOn ? "unmuted" : "muted"}`}
               aria-label={previewAudioOn ? "Mute preview audio" : "Unmute preview audio"}
               aria-pressed={previewAudioOn}
               onClick={(event) => {
@@ -149,9 +156,15 @@ export default function MovieCard({ movie, onClick }) {
             >
               <span className="preview-audio-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" focusable="false">
-                  <path d="M4 9h4l5-4v14l-5-4H4z" />
-                  <path d="M16.5 9.5a4 4 0 0 1 0 5" />
-                  <path d="M19 7a7 7 0 0 1 0 10" />
+                  <path d="M11 5 6.6 9H3.5v6h3.1L11 19z" />
+                  {previewAudioOn ? (
+                    <path d="M14.5 9.5a4.2 4.2 0 0 1 0 5" />
+                  ) : (
+                    <>
+                      <path d="M14.2 10.2l5.6 5.6" />
+                      <path d="M19.8 10.2l-5.6 5.6" />
+                    </>
+                  )}
                 </svg>
               </span>
             </button>

@@ -420,6 +420,8 @@ body {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(6, minmax(0, 1fr));
+  overflow: visible;
+  isolation: isolate;
 }
 
 .render-sentinel {
@@ -431,6 +433,8 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 1rem;
+  overflow: visible;
+  isolation: isolate;
 }
 
 .card {
@@ -441,8 +445,11 @@ body {
   border-radius: 14px;
   overflow: hidden;
   background: var(--panel);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 280ms ease;
   position: relative;
+  z-index: 1;
+  transform-origin: center center;
+  will-change: transform;
 }
 
 .availability-badge {
@@ -465,9 +472,14 @@ body {
   background: rgba(176, 6, 16, 0.9);
 }
 
-.card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
+.card.is-hovered {
+  transform: translateY(-22px) scale(1.16);
+  box-shadow: 0 26px 52px rgba(0, 0, 0, 0.64);
+  z-index: 24;
+}
+
+.card.is-previewing {
+  box-shadow: 0 32px 66px rgba(0, 0, 0, 0.72);
 }
 
 .card img {
@@ -475,7 +487,12 @@ body {
   height: 250px;
   object-fit: cover;
   display: block;
-  transition: filter 0.25s ease, transform 0.25s ease;
+  transition: filter 280ms ease, transform 280ms ease;
+}
+
+.card.is-hovered img {
+  transform: scale(1.03);
+  filter: brightness(1.08);
 }
 
 .card-media {
@@ -483,6 +500,7 @@ body {
   height: 250px;
   background: #0b0c10;
   position: relative;
+  overflow: hidden;
 }
 
 .card-media img,
@@ -499,33 +517,45 @@ body {
 
 .preview-audio-toggle {
   position: absolute;
-  right: 0.45rem;
-  bottom: 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  background: rgba(0, 0, 0, 0.58);
+  right: 0.62rem;
+  bottom: 0.62rem;
+  border: 1.6px solid rgba(255, 255, 255, 0.82);
+  background: rgba(22, 22, 22, 0.72);
   color: #fff;
   border-radius: 999px;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 2;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  z-index: 3;
+  backdrop-filter: blur(3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.42);
+  opacity: 0;
+  transform: translateY(8px) scale(0.92);
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 180ms ease, border-color 180ms ease;
+}
+
+.card.is-previewing .preview-audio-toggle {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
 }
 
 .preview-audio-toggle:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(16, 16, 16, 0.9);
+  border-color: rgba(255, 255, 255, 0.96);
 }
 
 .preview-audio-icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1.08rem;
+  height: 1.08rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
 
 .preview-audio-icon svg {
@@ -533,19 +563,9 @@ body {
   height: 100%;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.9;
+  stroke-width: 2.05;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.preview-audio-toggle.muted .preview-audio-icon::after {
-  content: "";
-  position: absolute;
-  width: 1.2rem;
-  height: 2px;
-  background: #ff5b62;
-  border-radius: 999px;
-  transform: rotate(-45deg);
 }
 
 .card img.loading {
@@ -572,6 +592,13 @@ body {
 
 .card-info {
   padding: 0.55rem 0.6rem 0.6rem;
+  background: linear-gradient(180deg, rgba(20, 21, 24, 0.98), rgba(13, 14, 16, 0.98));
+  transition: background 220ms ease, transform 220ms ease;
+}
+
+.card.is-hovered .card-info {
+  background: linear-gradient(180deg, rgba(24, 26, 31, 0.99), rgba(14, 15, 18, 1));
+  transform: translateY(-2px);
 }
 
 .card-info h3 {
@@ -592,6 +619,11 @@ body {
   font-size: 0.78rem;
   color: var(--muted);
   margin-right: 0.45rem;
+  transition: color 220ms ease;
+}
+
+.card.is-hovered .card-info span {
+  color: #d2d4db;
 }
 
 .skeleton-line {
@@ -1129,9 +1161,14 @@ a:focus-visible {
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .card:hover {
+  .card.is-hovered {
     transform: none;
     box-shadow: none;
+  }
+
+  .card.is-hovered img {
+    transform: none;
+    filter: none;
   }
 
   .nav-links button:not(.active):hover {

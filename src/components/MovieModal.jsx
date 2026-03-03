@@ -6,33 +6,23 @@ import {
   fetchSimilarShows,
   IMG_BASE,
 } from "../api/tmdb";
-import { fetchLicensedPlaybackSession, isPlaybackEnabled } from "../api/playback";
 import { fetchCommunityData, postCommunityNote, postCommunityRating } from "../api/community";
-import { licensedProviders } from "../config/licensedProviders";
 import {
-  getContinueWatchingEntry,
   getMovieNotebookEntry,
   isInMyList,
   toggleMyList,
-  upsertContinueWatching,
   upsertMovieNotebookFeedback,
 } from "../utils/library";
 import { trackEvent } from "../utils/analytics";
-import { uiLabels } from "../config/appConfig";
 
 export default function MovieModal({ movie, onClose }) {
   const [activeMovie, setActiveMovie] = useState(movie);
   const [details, setDetails] = useState(null);
   const [similar, setSimilar] = useState([]);
   const [showTrailer, setShowTrailer] = useState(false);
-  const [showFullMovie, setShowFullMovie] = useState(false);
-  const [playback, setPlayback] = useState(null);
-  const [playbackLoading, setPlaybackLoading] = useState(false);
-  const [playbackError, setPlaybackError] = useState("");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(isInMyList(movie.id));
   const [shareStatus, setShareStatus] = useState("");
-  const [resumePoint, setResumePoint] = useState(0);
   const [notebook, setNotebook] = useState(
     getMovieNotebookEntry(movie.id, movie.mediaType || "movie")
   );
@@ -53,8 +43,6 @@ export default function MovieModal({ movie, onClose }) {
   useEffect(() => {
     setActiveMovie(movie);
     setSaved(isInMyList(movie.id));
-    const resumeEntry = getContinueWatchingEntry(movie.id, movie.mediaType || "movie");
-    setResumePoint(Number(resumeEntry?.resumeSeconds || 0));
     setNotebook(getMovieNotebookEntry(movie.id, movie.mediaType || "movie"));
     setNoteText("");
     setNoteStatus("");
@@ -111,10 +99,6 @@ export default function MovieModal({ movie, onClose }) {
       setDetails(null);
       setSimilar([]);
       setShowTrailer(false);
-      setShowFullMovie(false);
-      setPlayback(null);
-      setPlaybackLoading(false);
-      setPlaybackError("");
       setError("");
       setShareStatus("");
 
@@ -196,21 +180,6 @@ export default function MovieModal({ movie, onClose }) {
     };
   }, []);
 
-  useEffect(() => {
-    if (!details) {
-      return;
-    }
-    const title = details.title || details.name || "Untitled";
-    upsertContinueWatching({
-      id: activeMovie.id,
-      mediaType: activeMovie.mediaType || "movie",
-      title,
-      poster_path: details.poster_path || "",
-      release_date: details.release_date || details.first_air_date || "",
-      resumeSeconds: playback?.src ? 0 : undefined,
-    });
-  }, [activeMovie.id, activeMovie.mediaType, details, playback?.src]);
-
   if (error) {
     return (
       <div className="modal-overlay" onClick={onClose}>
@@ -256,7 +225,6 @@ export default function MovieModal({ movie, onClose }) {
     : details.runtime
       ? `${details.runtime} min`
       : "Unknown runtime";
-  const hasPlayback = Boolean(playback?.src);
   const topCast = (details.credits?.cast || []).slice(0, 5);
   const watched = Boolean(notebook?.watched);
   const notebookRating = selectedRating;
@@ -282,50 +250,6 @@ export default function MovieModal({ movie, onClose }) {
       ...nextPatch,
     });
     setNotebook(updated);
-  }
-
-  async function onWatchFullMovie() {
-    if (showFullMovie && hasPlayback) {
-      setShowFullMovie(false);
-      return;
-    }
-
-    if (hasPlayback) {
-      setShowFullMovie(true);
-      return;
-    }
-
-    setPlaybackLoading(true);
-    setPlaybackError("");
-
-    try {
-      const stream = await fetchLicensedPlaybackSession(activeMovie.id);
-      if (stream) {
-        setPlayback(stream);
-        setShowFullMovie(true);
-        trackEvent("start_playback", {
-          id: activeMovie.id,
-          mediaType: activeMovie.mediaType || "movie",
-          title,
-        });
-        upsertContinueWatching({
-          id: activeMovie.id,
-          mediaType: activeMovie.mediaType || "movie",
-          title,
-          poster_path: details.poster_path || "",
-          release_date: details.release_date || details.first_air_date || "",
-          resumeSeconds: 0,
-        });
-      } else {
-        setPlaybackError(
-          "No licensed full-movie stream is available for this title in your region."
-        );
-      }
-    } catch {
-      setPlaybackError("Failed to start licensed playback. Please try again.");
-    } finally {
-      setPlaybackLoading(false);
-    }
   }
 
   function onToggleMyList() {
@@ -369,32 +293,6 @@ export default function MovieModal({ movie, onClose }) {
       trackEvent("share_copy_link", { id: activeMovie.id, title });
     } catch {
       setShareStatus("Share failed");
-    }
-  }
-
-  function onVideoProgress(event) {
-    const resumeSeconds = Math.floor(event.currentTarget.currentTime || 0);
-    if (resumeSeconds % 5 !== 0) {
-      return;
-    }
-    upsertContinueWatching({
-      id: activeMovie.id,
-      mediaType: activeMovie.mediaType || "movie",
-      title,
-      poster_path: details.poster_path || "",
-      release_date: details.release_date || details.first_air_date || "",
-      resumeSeconds,
-    });
-  }
-
-  function onVideoReady(event) {
-    if (!resumePoint) {
-      return;
-    }
-    try {
-      event.currentTarget.currentTime = resumePoint;
-    } catch {
-      // Ignore seek errors.
     }
   }
 
@@ -525,83 +423,6 @@ export default function MovieModal({ movie, onClose }) {
                     </li>
                   ))}
                 </ul>
-              </div>
-            ) : null}
-            {isPlaybackEnabled ? (
-              <button
-                type="button"
-                className="stream-btn"
-                onClick={onWatchFullMovie}
-                disabled={playbackLoading}
-              >
-                {playbackLoading
-                  ? uiLabels.loadingStream
-                  : showFullMovie
-                    ? uiLabels.hideFullMovie
-                    : uiLabels.watchFullMovie}
-              </button>
-            ) : (
-              <p className="status-line">
-                Full-movie streaming is disabled. Add a licensed playback API to enable it.
-              </p>
-            )}
-            {playbackError ? (
-              <p className="status-line error" aria-live="polite">
-                {playbackError}
-              </p>
-            ) : null}
-            <p className="status-line provider-list">Licensed providers on Ciniverse:</p>
-            <div className="provider-chips">
-              {licensedProviders.map((provider) =>
-                provider.url ? (
-                  <a
-                    key={provider.name}
-                    href={provider.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="provider-chip provider-chip--link"
-                  >
-                    {provider.name}
-                  </a>
-                ) : (
-                  <span key={provider.name} className="provider-chip">
-                    {provider.name}
-                  </span>
-                )
-              )}
-            </div>
-            {showFullMovie && hasPlayback ? (
-              <div className="full-player-wrap">
-                {playback.type === "iframe" ? (
-                  <iframe
-                    title={`${title} full movie`}
-                    src={playback.src}
-                    allow="autoplay; encrypted-media; picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : (
-                  <video
-                    controls
-                    poster={playback.poster}
-                    onTimeUpdate={onVideoProgress}
-                    onLoadedMetadata={onVideoReady}
-                  >
-                    <source
-                      src={playback.src}
-                      type={
-                        playback.type === "hls"
-                          ? "application/x-mpegURL"
-                          : playback.type === "dash"
-                            ? "application/dash+xml"
-                            : "video/mp4"
-                      }
-                    />
-                    Your browser does not support the video tag.
-                  </video>
-                )}
-                <p className="license-note">
-                  Source: {playback.provider} ({playback.region})
-                </p>
               </div>
             ) : null}
             <button
