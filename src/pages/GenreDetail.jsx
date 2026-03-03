@@ -1,3 +1,4 @@
+// Page component for the GenreDetail view and its data wiring.
 import { useEffect, useState } from "react";
 import { fetchByGenre } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";

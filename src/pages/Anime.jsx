@@ -1,3 +1,4 @@
+// Page component for the Anime view and its data wiring.
 import { useEffect, useState } from "react";
 import { fetchAnime } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";

@@ -1,3 +1,4 @@
+// Page component for the MyList view and its data wiring.
 import { useEffect, useMemo, useState } from "react";
 import { IMG_BASE } from "../api/tmdb";
 import MovieModal from "../components/MovieModal";

@@ -1,3 +1,4 @@
+// Page component for the Home view and its data wiring.
 import { useEffect, useMemo, useState } from "react";
 import {
   fetchByGenre,
@@ -14,6 +15,7 @@ import useMovies from "../hooks/useMovies";
 import { GENRE_SECTIONS } from "../config/genres";
 import { applyFilters } from "../utils/filters";
 
+// Merge paginated/parallel TMDB responses and keep the first item per TMDB id.
 function mergeUnique(...lists) {
   const byId = new Map();
   lists.flat().forEach((movie) => {
@@ -24,6 +26,7 @@ function mergeUnique(...lists) {
   return Array.from(byId.values());
 }
 
+// Reusable genre rail with its own loading/error lifecycle.
 function GenreRail({ section, filters, onSelect, onOpenGenre }) {
   const { movies, loading, error, retry } = useMovies(
     async () => {
@@ -113,6 +116,7 @@ export default function Home({
   );
 
   useEffect(() => {
+    // Open modal from deep link/watch-target state and consume it once handled.
     if (!watchTarget) {
       return;
     }
@@ -128,6 +132,7 @@ export default function Home({
   );
 
   const topTwentyMovies = useMemo(() => {
+    // Build a deduplicated hero pool from top "trending + top rated" titles.
     const byId = new Map();
     [...filteredTrending, ...filteredTopRated].forEach((movie) => {
       if (movie?.id && !byId.has(movie.id)) {
@@ -138,6 +143,7 @@ export default function Home({
   }, [filteredTrending, filteredTopRated]);
 
   useEffect(() => {
+    // Rotate hero automatically while we have enough candidates to cycle.
     if (topTwentyMovies.length <= 1) {
       setActiveHeroIndex(0);
       setHeroTick(0);

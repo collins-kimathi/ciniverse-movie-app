@@ -1,3 +1,4 @@
+// Page component for the Shows view and its data wiring.
 import { useEffect, useState } from "react";
 import { fetchPopularShows } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";

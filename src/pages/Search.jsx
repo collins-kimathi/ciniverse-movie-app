@@ -1,3 +1,4 @@
+// Page component for the Search view and its data wiring.
 import { useEffect, useMemo, useState } from "react";
 import { searchMovies } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";

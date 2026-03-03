@@ -1,3 +1,4 @@
+// Page component for the Popular view and its data wiring.
 import { useEffect, useState } from "react";
 import { fetchPopular } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";
