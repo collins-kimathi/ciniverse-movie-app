@@ -133,9 +133,9 @@ export default function MovieCard({ movie, onClick }) {
       onBlur={stopPreview}
       aria-label={`Open details for ${title}`}
     >
-      {isPlaybackEnabled && licensed != null ? (
-        <span className={`availability-badge ${licensed ? "yes" : "no"}`}>
-          {licensed ? "Licensed" : "Not Licensed"}
+      {isPlaybackEnabled && licensed ? (
+        <span className="availability-badge yes">
+          Licensed
         </span>
       ) : null}
       <div className="card-media">
