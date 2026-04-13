@@ -1,7 +1,7 @@
 // UI component: MovieCard.
 import { useEffect, useRef, useState } from "react";
 import { fetchMovieVideos, fetchShowVideos, IMG_BASE } from "../api/tmdb";
-import { fetchLicensedPlaybackSession, isPlaybackEnabled } from "../api/playback";
+import { fetchTitleAvailability, isAvailabilityEnabled } from "../api/availability";
 
 // In-memory caches reduce repeated API calls while users browse rows/cards.
 const availabilityCache = new Map();
@@ -16,7 +16,8 @@ export default function MovieCard({ movie, onClick }) {
   const year = (movie.release_date || movie.first_air_date)?.slice(0, 4) || "Unknown";
   const title = movie.title || movie.name || "Untitled";
   const mediaType = movie.mediaType || "movie";
-  const [licensed, setLicensed] = useState(availabilityCache.get(movie.id));
+  const availabilityCacheKey = `${mediaType}:${movie.id}`;
+  const [availability, setAvailability] = useState(availabilityCache.get(availabilityCacheKey));
   const [imageLoaded, setImageLoaded] = useState(false);
   const [previewActive, setPreviewActive] = useState(false);
   const [previewAudioOn, setPreviewAudioOn] = useState(false);
@@ -34,33 +35,33 @@ export default function MovieCard({ movie, onClick }) {
 
   useEffect(() => {
     let cancelled = false;
-    if (!isPlaybackEnabled) {
+    if (!isAvailabilityEnabled) {
       return undefined;
     }
     // Reuse known availability so each title is checked only once per session.
-    if (availabilityCache.has(movie.id)) {
-      setLicensed(availabilityCache.get(movie.id));
+    if (availabilityCache.has(availabilityCacheKey)) {
+      setAvailability(availabilityCache.get(availabilityCacheKey));
       return undefined;
     }
-    fetchLicensedPlaybackSession(movie.id)
-      .then((stream) => {
-        const isLicensed = Boolean(stream?.src);
-        availabilityCache.set(movie.id, isLicensed);
+    fetchTitleAvailability(movie.id, mediaType)
+      .then((result) => {
+        availabilityCache.set(availabilityCacheKey, result);
         if (!cancelled) {
-          setLicensed(isLicensed);
+          setAvailability(result);
         }
       })
       .catch(() => {
-        availabilityCache.set(movie.id, false);
+        const unavailable = { available: false, label: "", source: "", providers: [] };
+        availabilityCache.set(availabilityCacheKey, unavailable);
         if (!cancelled) {
-          setLicensed(false);
+          setAvailability(unavailable);
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [movie.id]);
+  }, [availabilityCacheKey, mediaType, movie.id]);
 
   async function ensureTrailerKey() {
     const cacheKey = `${mediaType}:${movie.id}`;
@@ -133,9 +134,9 @@ export default function MovieCard({ movie, onClick }) {
       onBlur={stopPreview}
       aria-label={`Open details for ${title}`}
     >
-      {isPlaybackEnabled && licensed ? (
+      {isAvailabilityEnabled && availability?.available ? (
         <span className="availability-badge yes">
-          Licensed
+          {availability.label || "Available"}
         </span>
       ) : null}
       <div className="card-media">

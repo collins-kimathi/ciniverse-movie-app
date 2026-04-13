@@ -51,9 +51,11 @@ VITE_PLAYBACK_API_BASE_URL=http://localhost:4000
 # Optional shared key sent as x-api-key header to your backend
 VITE_PLAYBACK_API_KEY=your_playback_api_key
 
-# Optional: override provider badges shown in the modal
-# Format: Provider Name|https://provider-url,Another Provider|https://url
-VITE_LICENSED_PROVIDERS=Netflix|https://www.netflix.com,Prime Video|https://www.primevideo.com
+# RapidAPI Streaming Availability (used for "Streaming" badges)
+VITE_STREAMING_AVAILABILITY_API_KEY=your_rapidapi_key
+VITE_STREAMING_AVAILABILITY_API_HOST=streaming-availability.p.rapidapi.com
+VITE_STREAMING_AVAILABILITY_COUNTRY=us
+VITE_STREAMING_AVAILABILITY_LANGUAGE=en
 
 # Community API (optional override). If empty, frontend calls same-origin /api routes.
 # VITE_COMMUNITY_API_BASE_URL=https://your-api-domain.com
@@ -67,6 +69,7 @@ UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
 You can use either variable. If `VITE_TMDB_BEARER_TOKEN` is set, it is used automatically.
 Full-movie playback works only from your licensed backend.
 Shared notes/ratings work from the Community API endpoints.
+Streaming badges can come from the Streaming Availability RapidAPI service.
 
 ### Licensed playback endpoint contract
 
@@ -93,6 +96,22 @@ Notes:
 - Return `404` (or `204`) if the movie is not licensed for playback.
 - `playback.type` can be `iframe`, `hls`, `dash`, or `mp4`.
 - Your backend should enforce entitlement, region, and expiration checks before returning stream URLs.
+
+### Streaming Availability endpoint contract
+
+Frontend call:
+
+- `GET https://streaming-availability.p.rapidapi.com/shows/{tmdbType}%2F{tmdbId}?country=us&output_language=en`
+
+Examples:
+
+- `GET /shows/movie%2F603`
+- `GET /shows/tv%2F1399`
+
+Required headers:
+
+- `X-RapidAPI-Key`
+- `X-RapidAPI-Host: streaming-availability.p.rapidapi.com`
 
 ### Community API endpoint contract (Vercel /api)
 
@@ -150,7 +169,7 @@ Navigation is handled in-app via the top navbar.
 
 - The app uses TMDB image base path `https://image.tmdb.org/t/p/w500`.
 - Full-movie playback comes from your licensed playback backend.
-- Licensed provider badges come from `VITE_LICENSED_PROVIDERS` (or built-in defaults).
+- Streaming provider badges come from the Streaming Availability RapidAPI response.
 - SEO defaults in `index.html`, `public/robots.txt`, and `public/sitemap.xml` are set to `https://ciniverse-movie-app.vercel.app`.
 - For production shared community data, configure `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. Without them, Vercel /api uses in-memory fallback (not durable).
 

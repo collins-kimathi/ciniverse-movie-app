@@ -15,6 +15,7 @@ import {
   upsertMovieNotebookFeedback,
 } from "../utils/library";
 import { trackEvent } from "../utils/analytics";
+import { fetchTitleAvailability, isAvailabilityEnabled } from "../api/availability";
 
 export default function MovieModal({ movie, onClose }) {
   const [activeMovie, setActiveMovie] = useState(movie);
@@ -37,6 +38,8 @@ export default function MovieModal({ movie, onClose }) {
   });
   const [communityLoading, setCommunityLoading] = useState(false);
   const [communityError, setCommunityError] = useState("");
+  const [availability, setAvailability] = useState(null);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const modalRef = useRef(null);
 
   const isShow = activeMovie.mediaType === "tv";
@@ -88,6 +91,43 @@ export default function MovieModal({ movie, onClose }) {
     }
 
     loadCommunity();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeMovie.id, activeMovie.mediaType]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAvailability() {
+      if (!isAvailabilityEnabled) {
+        setAvailability(null);
+        setAvailabilityLoading(false);
+        return;
+      }
+
+      setAvailabilityLoading(true);
+      try {
+        const data = await fetchTitleAvailability(
+          activeMovie.id,
+          activeMovie.mediaType || "movie"
+        );
+        if (!cancelled) {
+          setAvailability(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setAvailability(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setAvailabilityLoading(false);
+        }
+      }
+    }
+
+    loadAvailability();
+
     return () => {
       cancelled = true;
     };
@@ -204,9 +244,8 @@ export default function MovieModal({ movie, onClose }) {
     );
   }
 
-  const trailer = details.videos?.results?.find(
-    (v) => v.type === "Trailer" && v.site === "YouTube"
-  );
+  const title = details.title || details.name || "Untitled";
+  const trailer = details.videos?.results?.find((v) => v.type === "Trailer" && v.site === "YouTube");
   const trailerSrc = trailer?.key
     ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0`
     : `https://www.youtube.com/embed?autoplay=1&rel=0&listType=search&list=${encodeURIComponent(
@@ -217,7 +256,6 @@ export default function MovieModal({ movie, onClose }) {
     : "https://via.placeholder.com/300x450?text=No+Image";
   const rating =
     typeof details.vote_average === "number" ? details.vote_average.toFixed(1) : "N/A";
-  const title = details.title || details.name || "Untitled";
   const year = (details.release_date || details.first_air_date)?.slice(0, 4) || "Unknown";
   const runtime = isShow
     ? details.episode_run_time?.[0]
@@ -239,6 +277,22 @@ export default function MovieModal({ movie, onClose }) {
   const totalRatings = Number(community?.ratings?.totalRatings || 0);
   const averageRating = Number(community?.ratings?.averageRating || 0);
   const ratingCounts = community?.ratings?.counts || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  const providerChips = Array.isArray(availability?.providers) ? availability.providers : [];
+
+  function onWatchNow() {
+    if (!availability?.actionUrl) {
+      return;
+    }
+
+    window.open(availability.actionUrl, "_blank", "noopener,noreferrer");
+    trackEvent("watch_now_click", {
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      title,
+      source: availability.source || "unknown",
+      target: availability.actionUrl,
+    });
+  }
 
   function applyNotebookFeedback(nextPatch) {
     const updated = upsertMovieNotebookFeedback({
@@ -405,11 +459,43 @@ export default function MovieModal({ movie, onClose }) {
               <button type="button" className="row-more-btn" onClick={onToggleMyList}>
                 {saved ? "Remove From My List" : "Add To My List"}
               </button>
+              {availability?.available && availability?.actionUrl ? (
+                <button type="button" className="stream-btn" onClick={onWatchNow}>
+                  {availability.actionLabel || "Watch Now"}
+                </button>
+              ) : null}
               <button type="button" className="row-more-btn" onClick={onShare}>
                 Share
               </button>
               {shareStatus ? <span className="status-inline">{shareStatus}</span> : null}
             </div>
+            {availabilityLoading ? (
+              <p className="status-line">Checking where you can stream this title...</p>
+            ) : null}
+            {providerChips.length ? (
+              <div className="providers" aria-label="Streaming providers">
+                <p className="status-line provider-list">Available On</p>
+                <div className="provider-chips">
+                  {providerChips.map((provider) =>
+                    provider.homePage ? (
+                      <a
+                        key={provider.id}
+                        className="provider-chip provider-chip--link"
+                        href={provider.homePage}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {provider.name}
+                      </a>
+                    ) : (
+                      <span key={provider.id} className="provider-chip">
+                        {provider.name}
+                      </span>
+                    )
+                  )}
+                </div>
+              </div>
+            ) : null}
             <p>
               Rating: {rating} | {year} | {runtime}
             </p>
