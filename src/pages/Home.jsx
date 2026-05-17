@@ -63,11 +63,10 @@ export default function Home({
   watchTarget = null,
   onConsumeWatchTarget = () => {},
 }) {
-  const HERO_ROTATE_MS = 8000;
+  const HERO_ROTATE_MS = 12000;
   const [selected, setSelected] = useState(null);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
-  const [heroTick, setHeroTick] = useState(0);
-  const [filters, setFilters] = useState({
+  const [filters] = useState({
     year: "all",
     minRating: 0,
     language: "all",
@@ -146,14 +145,11 @@ export default function Home({
     // Rotate hero automatically while we have enough candidates to cycle.
     if (topTwentyMovies.length <= 1) {
       setActiveHeroIndex(0);
-      setHeroTick(0);
       return;
     }
 
-    setHeroTick((value) => value + 1);
     const interval = window.setInterval(() => {
       setActiveHeroIndex((current) => (current + 1) % topTwentyMovies.length);
-      setHeroTick((value) => value + 1);
     }, HERO_ROTATE_MS);
 
     return () => window.clearInterval(interval);
@@ -169,8 +165,6 @@ export default function Home({
       <HeroFeatured
         movie={heroMovie}
         onPlay={setSelected}
-        rotateMs={HERO_ROTATE_MS}
-        tick={heroTick}
       />
 
       {trendingLoading ? <SkeletonRow title="Trending This Week" /> : null}
