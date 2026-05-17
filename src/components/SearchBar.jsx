@@ -10,33 +10,8 @@ export default function SearchBar({ onSearch }) {
   const [recent, setRecent] = useState(readRecentSearches());
   const [liveSuggestions, setLiveSuggestions] = useState([]);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const inputRef = useRef(null);
-
-  useEffect(() => {
-    const clean = query.trim();
-    if (!clean) {
-      return undefined;
-    }
-
-    const timeout = window.setTimeout(() => {
-      onSearch(clean);
-      pushRecentSearch(clean);
-      setRecent(readRecentSearches());
-      trackEvent("search_debounced", { query: clean });
-    }, 400);
-
-    return () => window.clearTimeout(timeout);
-  }, [query, onSearch]);
-
-  useEffect(() => {
-    if (!mobileOpen) {
-      return;
-    }
-    window.setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
-  }, [mobileOpen]);
 
   const filteredRecent = useMemo(
     () =>
@@ -102,14 +77,24 @@ export default function SearchBar({ onSearch }) {
   function submit(event) {
     event.preventDefault();
     const clean = query.trim();
-    onSearch(clean);
-    if (clean) {
-      pushRecentSearch(clean);
-      setRecent(readRecentSearches());
-      trackEvent("search_submit", { query: clean });
+
+    if (!searchOpen) {
+      setSearchOpen(true);
+      window.setTimeout(() => inputRef.current?.focus(), 0);
+      return;
     }
+
+    if (!clean) {
+      inputRef.current?.focus();
+      return;
+    }
+
+    onSearch(clean);
+    pushRecentSearch(clean);
+    setRecent(readRecentSearches());
+    trackEvent("search_submit", { query: clean });
     setFocused(false);
-    setMobileOpen(false);
+    setSearchOpen(false);
   }
 
   function chooseRecent(value) {
@@ -118,7 +103,7 @@ export default function SearchBar({ onSearch }) {
     pushRecentSearch(value);
     setRecent(readRecentSearches());
     setFocused(false);
-    setMobileOpen(false);
+    setSearchOpen(false);
   }
 
   function chooseSuggestion(item) {
@@ -135,6 +120,7 @@ export default function SearchBar({ onSearch }) {
     setQuery("");
     onSearch("");
     setFocused(false);
+    setSearchOpen(false);
     trackEvent("search_history_cleared");
   }
 
@@ -169,31 +155,18 @@ export default function SearchBar({ onSearch }) {
 
     if (event.key === "Escape") {
       setFocused(false);
+      if (!query.trim()) {
+        setSearchOpen(false);
+      }
     }
   }
 
   return (
     <form
       onSubmit={submit}
-      className={`search-form ${mobileOpen ? "mobile-open" : ""}`}
+      className={`search-form ${searchOpen || focused || query.trim() ? "is-open" : ""}`.trim()}
       autoComplete="off"
     >
-      <button
-        type="button"
-        className="mobile-search-toggle"
-        aria-label={mobileOpen ? "Close search" : "Open search"}
-        onClick={() => setMobileOpen((prev) => !prev)}
-      >
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18">
-          <circle cx="10" cy="10" r="6.5" fill="none" stroke="#ff3a45" strokeWidth="3.2" />
-          <path
-            d="M14.8 14.8 20.8 20.8"
-            stroke="#ff3a45"
-            strokeWidth="3.4"
-            strokeLinecap="round"
-          />
-        </svg>
-      </button>
       <div className="search-form-fields">
         <input
           ref={inputRef}
@@ -204,8 +177,18 @@ export default function SearchBar({ onSearch }) {
             setQuery(event.target.value);
             setActiveSuggestionIndex(-1);
           }}
-          onFocus={() => setFocused(true)}
-          onBlur={() => window.setTimeout(() => setFocused(false), 120)}
+          onFocus={() => {
+            setFocused(true);
+            setSearchOpen(true);
+          }}
+          onBlur={() =>
+            window.setTimeout(() => {
+              setFocused(false);
+              if (!query.trim()) {
+                setSearchOpen(false);
+              }
+            }, 120)
+          }
           onKeyDown={onInputKeyDown}
           placeholder="Search movies, trailers, notes"
           aria-label="Search movies, trailers, notes"
@@ -216,7 +199,12 @@ export default function SearchBar({ onSearch }) {
             activeSuggestionIndex >= 0 ? `movie-search-option-${activeSuggestionIndex}` : undefined
           }
         />
-        <button type="submit">Search</button>
+        <button type="submit" aria-label="Search">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <circle cx="10.5" cy="10.5" r="6.5" />
+            <path d="m15.4 15.4 5.1 5.1" />
+          </svg>
+        </button>
       </div>
       {focused && suggestionItems.length ? (
         <div

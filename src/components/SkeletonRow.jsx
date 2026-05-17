@@ -1,21 +1,8 @@
 // UI component: SkeletonRow.
-export default function SkeletonRow({ title = "Loading..." }) {
+export default function SkeletonRow() {
   return (
-    <section className="rail-section" aria-label="Loading movie row">
-      <div className="row-head">
-        <h3>{title}</h3>
-      </div>
-      <div className="row-slider-grid">
-        {Array.from({ length: 6 }, (_, index) => (
-          <div key={`skeleton-row-${index}`} className="card skeleton-card" aria-hidden="true">
-            <div className="skeleton-poster" />
-            <div className="card-info">
-              <div className="skeleton-line skeleton-w-80" />
-              <div className="skeleton-line skeleton-w-55" />
-            </div>
-          </div>
-        ))}
-      </div>
+    <section className="screen-loader" aria-label="Loading movie row" aria-busy="true">
+      <div className="cine-loader" aria-hidden="true" />
     </section>
   );
 }
