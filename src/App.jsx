@@ -2,6 +2,7 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import AppLoader from "./components/AppLoader";
 import { trackEvent } from "./utils/analytics";
 import { GENRE_SECTIONS } from "./config/genres";
 import { appConfig } from "./config/appConfig";
@@ -227,13 +228,7 @@ export default function App() {
         canInstall={appConfig.installEnabled && Boolean(installEvent)}
         onInstall={onInstall}
       />
-      <Suspense
-        fallback={
-          <main className="main">
-            <p className="status-line">Loading page...</p>
-          </main>
-        }
-      >
+      <Suspense fallback={<AppLoader />}>
         {page === "home" && (
           <HomePage
             watchTarget={watchTarget}
