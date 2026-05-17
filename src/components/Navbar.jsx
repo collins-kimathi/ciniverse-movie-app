@@ -22,7 +22,10 @@ export default function Navbar({
   return (
     <nav className="navbar">
       <button type="button" className="logo" onClick={() => go("home")}>
-        {appConfig.siteName.toUpperCase()}
+        <span className="logo-mark" aria-hidden="true">
+          <span>C</span>
+        </span>
+        <span>{appConfig.siteName}</span>
       </button>
       <button
         type="button"
@@ -47,6 +50,15 @@ export default function Navbar({
           className={activePage === "home" ? "active" : ""}
           onClick={() => go("home")}
         >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path
+              d="M3 10.8 12 3l9 7.8V21h-6v-6H9v6H3z"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+          </svg>
           Home
         </button>
         <button
@@ -54,6 +66,16 @@ export default function Navbar({
           className={activePage === "popular" ? "active" : ""}
           onClick={() => go("popular")}
         >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path
+              d="m8 8-4 4 4 4m8-8 4 4-4 4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
           Popular
         </button>
         <button
@@ -61,6 +83,15 @@ export default function Navbar({
           className={activePage === "shows" ? "active" : ""}
           onClick={() => go("shows")}
         >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path
+              d="M4 5h16v14H4zM12 5v14M4 12h16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+          </svg>
           Shows
         </button>
         <button

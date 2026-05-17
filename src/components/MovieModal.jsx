@@ -17,6 +17,29 @@ import {
 import { trackEvent } from "../utils/analytics";
 import { fetchTitleAvailability, isAvailabilityEnabled } from "../api/availability";
 
+const VIDKING_BASE_URL = "https://www.vidking.net/embed";
+const VIDKING_COLOR = "e50914";
+const PROGRESS_SAVE_INTERVAL_MS = 5000;
+const PROGRESS_SAVE_EVENTS = new Set(["pause", "ended", "seeked"]);
+
+function buildVidkingUrl({ id, mediaType, season = 1, episode = 1 }) {
+  const path =
+    mediaType === "tv"
+      ? `/tv/${id}/${season || 1}/${episode || 1}`
+      : `/movie/${id}`;
+  const params = new URLSearchParams({
+    color: VIDKING_COLOR,
+    autoPlay: "true",
+  });
+
+  if (mediaType === "tv") {
+    params.set("nextEpisode", "true");
+    params.set("episodeSelector", "true");
+  }
+
+  return `${VIDKING_BASE_URL}${path}?${params.toString()}`;
+}
+
 export default function MovieModal({ movie, onClose }) {
   const [activeMovie, setActiveMovie] = useState(movie);
   const [details, setDetails] = useState(null);
@@ -40,7 +63,11 @@ export default function MovieModal({ movie, onClose }) {
   const [communityError, setCommunityError] = useState("");
   const [availability, setAvailability] = useState(null);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
+  const [selectedSeason, setSelectedSeason] = useState(1);
+  const [selectedEpisode, setSelectedEpisode] = useState(1);
   const modalRef = useRef(null);
+  const lastProgressSaveRef = useRef(0);
 
   const isShow = activeMovie.mediaType === "tv";
 
@@ -52,6 +79,9 @@ export default function MovieModal({ movie, onClose }) {
     setNoteStatus("");
     setRatingStatus("");
     setSelectedRating(0);
+    setShowPlayer(false);
+    setSelectedSeason(1);
+    setSelectedEpisode(1);
     trackEvent("open_modal", { id: movie.id, mediaType: movie.mediaType || "movie" });
   }, [movie]);
 
@@ -61,7 +91,68 @@ export default function MovieModal({ movie, onClose }) {
     setNoteStatus("");
     setRatingStatus("");
     setSelectedRating(0);
+    setShowPlayer(false);
   }, [activeMovie.id, activeMovie.mediaType]);
+
+  useEffect(() => {
+    if (!showPlayer) {
+      return undefined;
+    }
+
+    function onPlayerMessage(event) {
+      if (event.origin && !event.origin.includes("vidking.net")) {
+        return;
+      }
+
+      let payload = event.data;
+      if (typeof payload === "string") {
+        try {
+          payload = JSON.parse(payload);
+        } catch {
+          return;
+        }
+      }
+
+      if (payload?.type !== "PLAYER_EVENT" || !payload.data) {
+        return;
+      }
+
+      const eventData = payload.data;
+      const mediaType = eventData.mediaType || activeMovie.mediaType || "movie";
+      const id = eventData.id || activeMovie.id;
+      const season = eventData.season || selectedSeason;
+      const episode = eventData.episode || selectedEpisode;
+      const key = `ciniverse:watch-progress:${mediaType}:${id}:${season}:${episode}`;
+      const now = Date.now();
+      const shouldSaveImmediately = PROGRESS_SAVE_EVENTS.has(eventData.event);
+
+      if (
+        !shouldSaveImmediately &&
+        now - lastProgressSaveRef.current < PROGRESS_SAVE_INTERVAL_MS
+      ) {
+        return;
+      }
+
+      try {
+        window.localStorage.setItem(
+          key,
+          JSON.stringify({
+            event: eventData.event,
+            currentTime: eventData.currentTime,
+            duration: eventData.duration,
+            progress: eventData.progress,
+            updatedAt: now,
+          })
+        );
+        lastProgressSaveRef.current = now;
+      } catch {
+        // Ignore storage failures so playback is never interrupted.
+      }
+    }
+
+    window.addEventListener("message", onPlayerMessage);
+    return () => window.removeEventListener("message", onPlayerMessage);
+  }, [activeMovie.id, activeMovie.mediaType, selectedEpisode, selectedSeason, showPlayer]);
 
   useEffect(() => {
     let cancelled = false;
@@ -210,6 +301,20 @@ export default function MovieModal({ movie, onClose }) {
   }, [activeMovie.id]);
 
   useEffect(() => {
+    if (!details || !isShow) {
+      return;
+    }
+
+    const seasons = (details.seasons || []).filter(
+      (season) => season.season_number > 0 && season.episode_count > 0
+    );
+    if (seasons.length && !seasons.some((season) => season.season_number === selectedSeason)) {
+      setSelectedSeason(seasons[0].season_number);
+      setSelectedEpisode(1);
+    }
+  }, [details, isShow, selectedSeason]);
+
+  useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     const previousOverscroll = document.body.style.overscrollBehavior;
     document.body.style.overflow = "hidden";
@@ -236,10 +341,13 @@ export default function MovieModal({ movie, onClose }) {
 
   if (!details) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal" onClick={(e) => e.stopPropagation()}>
-          <p className="status-line">Loading details...</p>
-        </div>
+      <div
+        className="modal-overlay modal-overlay--loading"
+        onClick={onClose}
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <div className="cine-loader" aria-hidden="true" />
       </div>
     );
   }
@@ -254,6 +362,9 @@ export default function MovieModal({ movie, onClose }) {
   const poster = details.poster_path
     ? `${IMG_BASE}${details.poster_path}`
     : "https://via.placeholder.com/300x450?text=No+Image";
+  const backdrop = details.backdrop_path
+    ? `https://image.tmdb.org/t/p/original${details.backdrop_path}`
+    : poster;
   const rating =
     typeof details.vote_average === "number" ? details.vote_average.toFixed(1) : "N/A";
   const year = (details.release_date || details.first_air_date)?.slice(0, 4) || "Unknown";
@@ -278,6 +389,22 @@ export default function MovieModal({ movie, onClose }) {
   const averageRating = Number(community?.ratings?.averageRating || 0);
   const ratingCounts = community?.ratings?.counts || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   const providerChips = Array.isArray(availability?.providers) ? availability.providers : [];
+  const availableSeasons = isShow
+    ? (details.seasons || []).filter(
+        (season) => season.season_number > 0 && season.episode_count > 0
+      )
+    : [];
+  const selectedSeasonInfo =
+    availableSeasons.find((season) => season.season_number === selectedSeason) ||
+    availableSeasons[0] ||
+    null;
+  const episodeCount = selectedSeasonInfo?.episode_count || 1;
+  const playerSrc = buildVidkingUrl({
+    id: activeMovie.id,
+    mediaType: activeMovie.mediaType || "movie",
+    season: selectedSeason,
+    episode: selectedEpisode,
+  });
 
   function onWatchNow() {
     if (!availability?.actionUrl) {
@@ -291,6 +418,20 @@ export default function MovieModal({ movie, onClose }) {
       title,
       source: availability.source || "unknown",
       target: availability.actionUrl,
+    });
+  }
+
+  function onTogglePlayer() {
+    const nextShowPlayer = !showPlayer;
+    setShowPlayer(nextShowPlayer);
+    if (nextShowPlayer) {
+      setShowTrailer(false);
+    }
+    trackEvent("toggle_vidking_player", {
+      id: activeMovie.id,
+      mediaType: activeMovie.mediaType || "movie",
+      title,
+      visible: nextShowPlayer,
     });
   }
 
@@ -450,78 +591,130 @@ export default function MovieModal({ movie, onClose }) {
         <button className="close-btn" onClick={onClose} aria-label="Close details">
           X
         </button>
-        <div className="modal-content">
-          <img src={poster} alt={details.title || "Movie poster"} />
-          <div className="modal-info">
-            <h2>{title}</h2>
-            {details.tagline ? <p className="tagline">{details.tagline}</p> : null}
-            <div className="modal-actions">
-              <button type="button" className="row-more-btn" onClick={onToggleMyList}>
-                {saved ? "Remove From My List" : "Add To My List"}
-              </button>
-              {availability?.available && availability?.actionUrl ? (
-                <button type="button" className="stream-btn" onClick={onWatchNow}>
-                  {availability.actionLabel || "Watch Now"}
+        <div className="modal-hero" style={{ backgroundImage: `url(${backdrop})` }}>
+          <div className="modal-hero-shade" aria-hidden="true" />
+          <div className="modal-hero-content">
+            <img className="modal-poster-card" src={poster} alt={details.title || "Movie poster"} />
+            <div className="modal-hero-info">
+              <h2>{title}</h2>
+              {details.tagline ? <p className="tagline">{details.tagline}</p> : null}
+              <div className="modal-meta">
+                <span>{rating}</span>
+                <span>{year}</span>
+                <span>{runtime}</span>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="stream-btn" onClick={onTogglePlayer}>
+                  {showPlayer ? "Hide Player" : "Watch Now"}
                 </button>
+                <button
+                  type="button"
+                  className="trailer-btn"
+                  onClick={() => {
+                    setShowTrailer((prev) => !prev);
+                    setShowPlayer(false);
+                    trackEvent("toggle_trailer", { id: activeMovie.id, title });
+                  }}
+                >
+                  {showTrailer ? "Hide Trailer" : "Watch Trailer Here"}
+                </button>
+                <button type="button" className="row-more-btn" onClick={onToggleMyList}>
+                  {saved ? "Remove From My List" : "Add To My List"}
+                </button>
+                {availability?.available && availability?.actionUrl ? (
+                  <button type="button" className="row-more-btn" onClick={onWatchNow}>
+                    {availability.actionLabel || "Open Provider"}
+                  </button>
+                ) : null}
+                <button type="button" className="row-more-btn" onClick={onShare}>
+                  Share
+                </button>
+                {shareStatus ? <span className="status-inline">{shareStatus}</span> : null}
+              </div>
+              {availabilityLoading ? (
+                <p className="status-line">Checking where you can stream this title...</p>
               ) : null}
-              <button type="button" className="row-more-btn" onClick={onShare}>
-                Share
-              </button>
-              {shareStatus ? <span className="status-inline">{shareStatus}</span> : null}
-            </div>
-            {availabilityLoading ? (
-              <p className="status-line">Checking where you can stream this title...</p>
-            ) : null}
-            {providerChips.length ? (
-              <div className="providers" aria-label="Streaming providers">
-                <p className="status-line provider-list">Available On</p>
-                <div className="provider-chips">
-                  {providerChips.map((provider) =>
-                    provider.homePage ? (
-                      <a
-                        key={provider.id}
-                        className="provider-chip provider-chip--link"
-                        href={provider.homePage}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {provider.name}
-                      </a>
-                    ) : (
-                      <span key={provider.id} className="provider-chip">
-                        {provider.name}
-                      </span>
-                    )
-                  )}
+              {providerChips.length ? (
+                <div className="providers" aria-label="Streaming providers">
+                  <p className="status-line provider-list">Available On</p>
+                  <div className="provider-chips">
+                    {providerChips.map((provider) =>
+                      provider.homePage ? (
+                        <a
+                          key={provider.id}
+                          className="provider-chip provider-chip--link"
+                          href={provider.homePage}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {provider.name}
+                        </a>
+                      ) : (
+                        <span key={provider.id} className="provider-chip">
+                          {provider.name}
+                        </span>
+                      )
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-body">
+          <div className="modal-info">
+            {showPlayer ? (
+              <section className="player-panel" aria-label={`${title} player`}>
+                {isShow ? (
+                  <div className="player-controls">
+                    <label>
+                      Season
+                      <select
+                        value={selectedSeason}
+                        onChange={(event) => {
+                          setSelectedSeason(Number(event.target.value));
+                          setSelectedEpisode(1);
+                        }}
+                      >
+                        {availableSeasons.length ? (
+                          availableSeasons.map((season) => (
+                            <option key={season.id} value={season.season_number}>
+                              {season.name || `Season ${season.season_number}`}
+                            </option>
+                          ))
+                        ) : (
+                          <option value={1}>Season 1</option>
+                        )}
+                      </select>
+                    </label>
+                    <label>
+                      Episode
+                      <select
+                        value={Math.min(selectedEpisode, episodeCount)}
+                        onChange={(event) => setSelectedEpisode(Number(event.target.value))}
+                      >
+                        {Array.from({ length: episodeCount }, (_, index) => index + 1).map(
+                          (episodeNumber) => (
+                            <option key={episodeNumber} value={episodeNumber}>
+                              Episode {episodeNumber}
+                            </option>
+                          )
+                        )}
+                      </select>
+                    </label>
+                  </div>
+                ) : null}
+                <div className="full-player-wrap">
+                  <iframe
+                    title={`${title} player`}
+                    src={playerSrc}
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </section>
             ) : null}
-            <p>
-              Rating: {rating} | {year} | {runtime}
-            </p>
-            <p>{details.overview || "No overview available."}</p>
-            {topCast.length ? (
-              <div className="cast-block">
-                <p className="status-line provider-list">Top Cast</p>
-                <ul>
-                  {topCast.map((person) => (
-                    <li key={person.credit_id || person.id}>
-                      {person.name} as {person.character || "Unknown"}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            <button
-              type="button"
-              className="trailer-btn"
-              onClick={() => {
-                setShowTrailer((prev) => !prev);
-                trackEvent("toggle_trailer", { id: activeMovie.id, title });
-              }}
-            >
-              {showTrailer ? "Hide Trailer" : "Watch Trailer Here"}
-            </button>
             {showTrailer ? (
               <div className="trailer-frame-wrap">
                 <iframe
@@ -531,6 +724,24 @@ export default function MovieModal({ movie, onClose }) {
                   allowFullScreen
                 />
               </div>
+            ) : null}
+
+            <section className="modal-section modal-overview">
+              <p className="status-line provider-list">Overview</p>
+              <p>{details.overview || "No overview available."}</p>
+            </section>
+
+            {topCast.length ? (
+              <section className="modal-section cast-block">
+                <p className="status-line provider-list">Top Cast</p>
+                <ul>
+                  {topCast.map((person) => (
+                    <li key={person.credit_id || person.id}>
+                      {person.name} as {person.character || "Unknown"}
+                    </li>
+                  ))}
+                </ul>
+              </section>
             ) : null}
             <section className="notebook-panel" aria-label="ReelNotes">
               <p className="status-line provider-list">ReelNotes</p>
