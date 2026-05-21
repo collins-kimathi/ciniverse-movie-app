@@ -36,6 +36,5 @@ export function trackEvent(name, payload = {}) {
   writeEvents(events);
 
   // Useful during local development.
-  // eslint-disable-next-line no-console
   console.info("[analytics]", event);
 }

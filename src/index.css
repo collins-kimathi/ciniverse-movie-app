@@ -89,6 +89,13 @@ body {
     font-family: "Manrope", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+.logo > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .logo-mark {
     width: 50px;
     height: 50px;
@@ -515,6 +522,8 @@ body {
 .rail-section h3 {
     font-size: 1.25rem;
     margin-bottom: 0.55rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .row-head {
@@ -586,6 +595,7 @@ body {
     text-align: left;
     border: none;
     width: 100%;
+    min-width: 0;
     cursor: pointer;
     border-radius: 14px;
     overflow: hidden;
@@ -642,7 +652,8 @@ body {
 
 .card-media {
     width: 100%;
-    height: 250px;
+    aspect-ratio: 2 / 3;
+    height: auto;
     background: #0b0c10;
     position: relative;
     overflow: hidden;
@@ -728,7 +739,8 @@ body {
 
 .skeleton-poster {
     width: 100%;
-    height: 250px;
+    aspect-ratio: 2 / 3;
+    height: auto;
     background: linear-gradient(90deg, #2a2b30 25%, #34363d 37%, #2a2b30 63%);
     background-size: 300% 100%;
     animation: skeletonShimmer 1.2s infinite linear;
@@ -756,6 +768,7 @@ body {
     -webkit-box-orient: vertical;
     overflow: hidden;
     min-height: 2.35em;
+    overflow-wrap: anywhere;
 }
 
 .card-info span {
@@ -1456,6 +1469,7 @@ a:focus-visible {
         order: 1;
         margin-right: 0;
         font-size: 1.35rem;
+        min-width: 0;
     }
     .logo-mark {
         width: 42px;
@@ -1530,7 +1544,7 @@ a:focus-visible {
         gap: 0.75rem;
     }
     .card img {
-        height: 180px;
+        height: 100%;
     }
     .row-head {
         align-items: flex-start;
@@ -1588,12 +1602,17 @@ a:focus-visible {
         align-items: center;
         position: fixed;
     }
+    .navbar:has(.search-form.is-open) {
+        background: rgba(5, 6, 8, 0.96);
+        backdrop-filter: blur(16px);
+    }
     .logo {
         grid-area: logo;
-        font-size: 1.25rem;
+        font-size: clamp(1rem, 5vw, 1.25rem);
         letter-spacing: 0;
         justify-self: center;
         margin: 0;
+        max-width: 100%;
     }
     .logo-mark {
         width: 38px;
@@ -1650,10 +1669,13 @@ a:focus-visible {
     }
     .search-form.is-open {
         grid-column: 1 / -1;
-        grid-row: 3;
+        grid-row: 2;
         width: 100%;
         justify-self: stretch;
         margin-top: 0.45rem;
+    }
+    .search-form.is-open .search-form-fields {
+        width: 100%;
     }
     .search-form.is-open .search-suggestions {
         width: 100%;
@@ -1700,8 +1722,9 @@ a:focus-visible {
     }
     .row-slider-grid {
         display: grid;
+        grid-template-columns: none;
         grid-auto-flow: column;
-        grid-auto-columns: minmax(130px, 48vw);
+        grid-auto-columns: clamp(132px, 44vw, 176px);
         overflow-x: auto;
         overscroll-behavior-x: contain;
         scroll-snap-type: x mandatory;
@@ -1715,7 +1738,7 @@ a:focus-visible {
         scroll-snap-align: start;
     }
     .row-slider-grid .card img {
-        height: 200px;
+        height: 100%;
     }
     .grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1723,7 +1746,7 @@ a:focus-visible {
     }
     .card img {
         width: 100%;
-        height: auto;
+        height: 100%;
         aspect-ratio: 2 / 3;
     }
     .main {
@@ -1731,10 +1754,10 @@ a:focus-visible {
     }
     .hero {
         width: 100%;
-        min-height: 72vh;
+        min-height: min(720px, 78vh);
         margin: -4.8rem 0 0;
         border-radius: 0;
-        padding: 5rem max(0.85rem, env(safe-area-inset-right)) 4rem max(0.85rem, env(safe-area-inset-left));
+        padding: calc(6rem + env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) 3.5rem max(0.85rem, env(safe-area-inset-left));
     }
     .hero h2 {
         font-size: clamp(2rem, 8vw, 2.8rem);
@@ -1767,10 +1790,10 @@ a:focus-visible {
     .modal {
         width: min(100%, calc(100vw - 1rem));
         border-radius: 14px;
-        max-height: 94vh;
+        max-height: calc(100dvh - 1.1rem);
     }
     .modal-hero {
-        min-height: 430px;
+        min-height: min(430px, 76dvh);
     }
     .modal-hero-content {
         grid-template-columns: 1fr;
@@ -1785,7 +1808,31 @@ a:focus-visible {
     .modal-actions .stream-btn,
     .modal-actions .trailer-btn,
     .modal-actions .row-more-btn {
+        justify-content: center;
+        flex: 1 1 9rem;
         padding: 0.52rem 0.78rem;
+        font-size: 0.82rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .grid {
+        gap: 0.65rem;
+    }
+    .card-info {
+        padding: 0.5rem;
+    }
+    .card-info h3 {
+        font-size: 0.82rem;
+    }
+    .card-info span {
+        font-size: 0.72rem;
+    }
+    .hero h2 {
+        font-size: clamp(1.8rem, 11vw, 2.35rem);
+        max-width: 12ch;
+    }
+    .modal-meta {
         font-size: 0.82rem;
     }
 }
