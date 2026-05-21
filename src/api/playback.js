@@ -1,20 +1,10 @@
 // Frontend API client helpers for playback.
-const PLAYBACK_API_BASE_URL = import.meta.env.VITE_PLAYBACK_API_BASE_URL || "";
-const PLAYBACK_API_KEY = import.meta.env.VITE_PLAYBACK_API_KEY || "";
+const PLAYBACK_API_BASE_URL = (import.meta.env.VITE_PLAYBACK_API_BASE_URL || "/api/playback").replace(
+  /\/$/,
+  ""
+);
 
-export const isPlaybackEnabled = Boolean(PLAYBACK_API_BASE_URL);
-
-function buildPlaybackHeaders() {
-  const headers = {
-    accept: "application/json",
-  };
-
-  if (PLAYBACK_API_KEY) {
-    headers["x-api-key"] = PLAYBACK_API_KEY;
-  }
-
-  return headers;
-}
+export const isPlaybackEnabled = import.meta.env.VITE_PLAYBACK_ENABLED === "true";
 
 function normalizePlayback(payload) {
   if (!payload || typeof payload !== "object") {
@@ -37,17 +27,12 @@ function normalizePlayback(payload) {
 }
 
 export async function fetchLicensedPlaybackSession(movieId) {
-  if (!PLAYBACK_API_BASE_URL) {
+  if (!isPlaybackEnabled) {
     return null;
   }
 
-  const response = await fetch(
-    `${PLAYBACK_API_BASE_URL}/v1/playback/movie/${movieId}`,
-    {
-      method: "GET",
-      headers: buildPlaybackHeaders(),
-    }
-  );
+  const query = new URLSearchParams({ movieId });
+  const response = await fetch(`${PLAYBACK_API_BASE_URL}?${query.toString()}`);
 
   if (response.status === 204 || response.status === 404) {
     return null;

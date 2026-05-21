@@ -1,42 +1,47 @@
 // Frontend API client helpers for tmdb.
-const BASE_URL = "https://api.themoviedb.org/3";
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY || "";
-const BEARER_TOKEN =
-  import.meta.env.VITE_TMDB_BEARER_TOKEN ||
-  "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2MTI2M2E4YzUxN2NjZGYwZTY1MzBjNzFlZTU1N2IxNSIsIm5iZiI6MTc3MTU3ODY4MS41OCwic3ViIjoiNjk5ODI1MzlmMjU3MDRiZjhlYWI5MGQ3Iiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.1OFbQMizTSTZrKhxcefW48zvP8ajF7VVteVgAuCGbpk";
+const env = import.meta.env || {};
+const TMDB_API_BASE_URL = (env.VITE_TMDB_API_BASE_URL || "/api/tmdb").replace(/\/$/, "");
 
 export const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
-// Use bearer auth when present, otherwise fallback to query API key.
-function createUrl(path) {
-  if (BEARER_TOKEN) {
-    return `${BASE_URL}${path}`;
-  }
-
-  const separator = path.includes("?") ? "&" : "?";
-  return `${BASE_URL}${path}${separator}api_key=${API_KEY}`;
+export function normalizePlayableSearchResults(results = []) {
+  const seen = new Set();
+  return results
+    .filter((item) => item?.id && (item.media_type === "movie" || item.media_type === "tv"))
+    .map((item) => ({
+      ...item,
+      mediaType: item.media_type === "tv" ? "tv" : "movie",
+    }))
+    .filter((item) => {
+      const key = `${item.mediaType}:${item.id}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
 }
 
-// Attach auth headers only for bearer-token mode.
-function createOptions() {
-  if (!BEARER_TOKEN) {
-    return undefined;
-  }
-
-  return {
-    headers: {
-      accept: "application/json",
-      Authorization: `Bearer ${BEARER_TOKEN}`,
-    },
-  };
+function createUrl(path) {
+  const params = new URLSearchParams({ path });
+  return `${TMDB_API_BASE_URL}?${params.toString()}`;
 }
 
 // Shared request wrapper for TMDB endpoints.
 async function request(path) {
-  const response = await fetch(createUrl(path), createOptions());
+  const response = await fetch(createUrl(path));
 
   if (!response.ok) {
-    throw new Error(`TMDB request failed: ${response.status}`);
+    let message = `TMDB request failed: ${response.status}`;
+    try {
+      const payload = await response.json();
+      if (typeof payload?.error === "string" && payload.error) {
+        message = payload.error;
+      }
+    } catch {
+      // Keep the generic HTTP message when the response is not JSON.
+    }
+    throw new Error(message);
   }
 
   return response.json();
@@ -64,10 +69,18 @@ export const fetchByGenre = (genreId, page = 1) =>
   request(
     `/discover/movie?include_adult=false&include_video=false&sort_by=popularity.desc&with_genres=${genreId}&page=${page}`,
   );
-export const searchMovies = (query) =>
-  request(`/search/movie?query=${encodeURIComponent(query)}`);
-export const searchMovieSuggestions = (query) =>
-  request(`/search/movie?include_adult=false&page=1&query=${encodeURIComponent(query)}`);
+export const searchPlayableTitles = async (query) => {
+  const data = await request(
+    `/search/multi?include_adult=false&page=1&query=${encodeURIComponent(query)}`
+  );
+  return {
+    ...data,
+    results: normalizePlayableSearchResults(data.results || []),
+  };
+};
+export const searchPlayableSuggestions = searchPlayableTitles;
+export const searchMovies = searchPlayableTitles;
+export const searchMovieSuggestions = searchPlayableSuggestions;
 export const fetchMovieDetails = (id) =>
   request(`/movie/${id}?append_to_response=videos,credits`);
 export const fetchShowDetails = (id) =>

@@ -138,6 +138,10 @@ export default function MovieCard({ movie, onClick }) {
         <span className="availability-badge yes">
           {availability.label || "Available"}
         </span>
+      ) : movie.playableProvider ? (
+        <span className="availability-badge playable">
+          {movie.playableProvider}
+        </span>
       ) : null}
       <div className="card-media">
         {showTrailerPreview ? (
@@ -188,7 +192,7 @@ export default function MovieCard({ movie, onClick }) {
       <div className="card-info">
         <h3>{title}</h3>
         <span>Rating: {rating}</span>
-        <span>{year}</span>
+        <span>{year} | {mediaType === "tv" ? "TV Show" : "Movie"}</span>
       </div>
     </button>
   );

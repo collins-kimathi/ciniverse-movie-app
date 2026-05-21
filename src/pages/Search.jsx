@@ -1,6 +1,6 @@
 // Page component for the Search view and its data wiring.
 import { useEffect, useMemo, useState } from "react";
-import { searchMovies } from "../api/tmdb";
+import { searchPlayableTitles } from "../api/tmdb";
 import MovieGrid from "../components/MovieGrid";
 import MovieModal from "../components/MovieModal";
 import SkeletonGrid from "../components/SkeletonGrid";
@@ -14,7 +14,7 @@ export default function Search({ query, watchTarget = null, onConsumeWatchTarget
 
   const { movies: results, loading, error, retry } = useMovies(
     async () => {
-      const data = await searchMovies(cleanQuery);
+      const data = await searchPlayableTitles(cleanQuery);
       return data.results || [];
     },
     [cleanQuery],
@@ -49,7 +49,11 @@ export default function Search({ query, watchTarget = null, onConsumeWatchTarget
         {loading ? <SkeletonGrid count={12} /> : null}
         {error ? <SectionError message={error} onRetry={retry} /> : null}
         {!loading && !error ? (
-          <MovieGrid movies={results} onSelect={setSelected} emptyMessage="No movies matched your search." />
+          <MovieGrid
+            movies={results}
+            onSelect={setSelected}
+            emptyMessage="No playable movies or shows matched your search."
+          />
         ) : null}
       </section>
       {selected ? <MovieModal movie={selected} onClose={() => setSelected(null)} /> : null}

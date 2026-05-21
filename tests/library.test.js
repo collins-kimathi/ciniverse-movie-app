@@ -44,3 +44,29 @@ test("library persists my list, continue watching, and recent search", () => {
   upsertContinueWatching({ id: 9, mediaType: "movie", title: "Tenet", resumeSeconds: 32 });
   assert.equal(readContinueWatching()[0].id, 9);
 });
+
+test("continue watching updates existing title instead of duplicating it", () => {
+  global.window = { localStorage: createStorage() };
+
+  upsertContinueWatching({
+    id: 1399,
+    mediaType: "tv",
+    title: "Game of Thrones",
+    season: 1,
+    episode: 1,
+    resumeSeconds: 20,
+  });
+  upsertContinueWatching({
+    id: 1399,
+    mediaType: "tv",
+    title: "Game of Thrones",
+    season: 1,
+    episode: 2,
+    resumeSeconds: 92,
+  });
+
+  const list = readContinueWatching();
+  assert.equal(list.length, 1);
+  assert.equal(list[0].episode, 2);
+  assert.equal(list[0].resumeSeconds, 92);
+});

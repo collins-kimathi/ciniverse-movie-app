@@ -1,31 +1,14 @@
-// Frontend API client helpers for Streaming Availability via RapidAPI.
-const STREAMING_AVAILABILITY_BASE_URL =
-  import.meta.env.VITE_STREAMING_AVAILABILITY_BASE_URL ||
-  "https://streaming-availability.p.rapidapi.com";
-const STREAMING_AVAILABILITY_API_KEY =
-  import.meta.env.VITE_STREAMING_AVAILABILITY_API_KEY || "";
-const STREAMING_AVAILABILITY_API_HOST =
-  import.meta.env.VITE_STREAMING_AVAILABILITY_API_HOST ||
-  "streaming-availability.p.rapidapi.com";
+// Frontend API client helpers for Streaming Availability.
+const STREAMING_AVAILABILITY_API_BASE_URL = (
+  import.meta.env.VITE_STREAMING_AVAILABILITY_API_BASE_URL || "/api/streaming-availability"
+).replace(/\/$/, "");
 const STREAMING_AVAILABILITY_COUNTRY =
   (import.meta.env.VITE_STREAMING_AVAILABILITY_COUNTRY || "us").toLowerCase();
 const STREAMING_AVAILABILITY_LANGUAGE =
   import.meta.env.VITE_STREAMING_AVAILABILITY_LANGUAGE || "en";
 
-export const isStreamingAvailabilityEnabled = Boolean(STREAMING_AVAILABILITY_API_KEY);
-
-function buildHeaders() {
-  return {
-    accept: "application/json",
-    "X-RapidAPI-Key": STREAMING_AVAILABILITY_API_KEY,
-    "X-RapidAPI-Host": STREAMING_AVAILABILITY_API_HOST,
-  };
-}
-
-function getShowId(mediaType, id) {
-  const sourceType = mediaType === "tv" ? "tv" : "movie";
-  return `${sourceType}/${id}`;
-}
+export const isStreamingAvailabilityEnabled =
+  import.meta.env.VITE_STREAMING_AVAILABILITY_ENABLED === "true";
 
 function collectServices(value, found = []) {
   if (Array.isArray(value)) {
@@ -78,18 +61,13 @@ export async function fetchStreamingAvailability(mediaType, id) {
     return null;
   }
 
-  const showId = encodeURIComponent(getShowId(mediaType, id));
   const query = new URLSearchParams({
+    mediaType,
+    id,
     country: STREAMING_AVAILABILITY_COUNTRY,
     output_language: STREAMING_AVAILABILITY_LANGUAGE,
   });
-  const response = await fetch(
-    `${STREAMING_AVAILABILITY_BASE_URL}/shows/${showId}?${query.toString()}`,
-    {
-      method: "GET",
-      headers: buildHeaders(),
-    }
-  );
+  const response = await fetch(`${STREAMING_AVAILABILITY_API_BASE_URL}?${query.toString()}`);
 
   if (response.status === 204 || response.status === 404) {
     return null;

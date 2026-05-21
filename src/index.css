@@ -627,6 +627,10 @@ body {
     background: rgba(176, 6, 16, 0.9);
 }
 
+.availability-badge.playable {
+    background: rgba(229, 9, 20, 0.92);
+}
+
 .card.is-hovered {
     transform: translateY(-22px) scale(1.16);
     box-shadow: 0 26px 52px rgba(0, 0, 0, 0.64);

@@ -39,21 +39,27 @@ npm install
 2. Create a `.env.local` file in the project root:
 
 ```env
-# Option 1: API key auth
-VITE_TMDB_API_KEY=your_tmdb_api_key
+# Server-only TMDB credentials used by /api/tmdb.
+# Prefer the bearer token. Do not prefix server secrets with VITE_.
+TMDB_BEARER_TOKEN=your_tmdb_bearer_token
+TMDB_API_KEY=your_tmdb_api_key
 
-# Option 2: Bearer token auth (preferred)
-VITE_TMDB_BEARER_TOKEN=your_tmdb_bearer_token
+# Optional: override where the frontend sends TMDB requests.
+# Leave this empty in production when deploying the included /api/tmdb function.
+# VITE_TMDB_API_BASE_URL=/api/tmdb
 
-# Licensed playback API (required for full-movie streaming)
-VITE_PLAYBACK_API_BASE_URL=http://localhost:4000
+# Licensed playback API proxy settings (server-only)
+PLAYBACK_API_BASE_URL=http://localhost:4000
+PLAYBACK_API_KEY=your_playback_api_key
 
-# Optional shared key sent as x-api-key header to your backend
-VITE_PLAYBACK_API_KEY=your_playback_api_key
+# Optional public toggles
+VITE_PLAYBACK_ENABLED=true
 
-# RapidAPI Streaming Availability (used for "Streaming" badges)
-VITE_STREAMING_AVAILABILITY_API_KEY=your_rapidapi_key
-VITE_STREAMING_AVAILABILITY_API_HOST=streaming-availability.p.rapidapi.com
+# RapidAPI Streaming Availability proxy settings (server-only key)
+STREAMING_AVAILABILITY_API_KEY=your_rapidapi_key
+STREAMING_AVAILABILITY_API_HOST=streaming-availability.p.rapidapi.com
+STREAMING_AVAILABILITY_BASE_URL=https://streaming-availability.p.rapidapi.com
+VITE_STREAMING_AVAILABILITY_ENABLED=true
 VITE_STREAMING_AVAILABILITY_COUNTRY=us
 VITE_STREAMING_AVAILABILITY_LANGUAGE=en
 
@@ -66,7 +72,9 @@ UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
 
 ```
 
-You can use either variable. If `VITE_TMDB_BEARER_TOKEN` is set, it is used automatically.
+You can use either TMDB server variable. If `TMDB_BEARER_TOKEN` is set, it is used automatically.
+TMDB credentials are read by the `/api/tmdb` serverless function and the Vite dev proxy, so they are not bundled into browser JavaScript.
+Streaming Availability and licensed playback keys are also read by same-origin `/api` proxy routes. Keep provider secrets in non-`VITE_` variables.
 Full-movie playback works only from your licensed backend.
 Shared notes/ratings work from the Community API endpoints.
 Streaming badges can come from the Streaming Availability RapidAPI service.
@@ -75,7 +83,8 @@ Streaming badges can come from the Streaming Availability RapidAPI service.
 
 Frontend call:
 
-- `GET /v1/playback/movie/:tmdbMovieId`
+- Browser: `GET /api/playback?movieId=:tmdbMovieId`
+- Server proxy target: `GET {PLAYBACK_API_BASE_URL}/v1/playback/movie/:tmdbMovieId`
 
 Expected JSON response:
 
@@ -101,7 +110,8 @@ Notes:
 
 Frontend call:
 
-- `GET https://streaming-availability.p.rapidapi.com/shows/{tmdbType}%2F{tmdbId}?country=us&output_language=en`
+- Browser: `GET /api/streaming-availability?mediaType=:movieOrTv&id=:tmdbId&country=us&output_language=en`
+- Server proxy target: `GET https://streaming-availability.p.rapidapi.com/shows/{tmdbType}%2F{tmdbId}?country=us&output_language=en`
 
 Examples:
 

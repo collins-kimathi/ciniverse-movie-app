@@ -42,7 +42,7 @@ export default function MovieGrid({
     <>
       <div className="grid">
         {visibleMovies.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} onClick={onSelect} />
+          <MovieCard key={`${movie.mediaType || "movie"}-${movie.id}`} movie={movie} onClick={onSelect} />
         ))}
       </div>
       {canLoadMore ? <div ref={sentinelRef} className="render-sentinel" aria-hidden="true" /> : null}

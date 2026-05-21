@@ -27,10 +27,10 @@ export default function useMovies(loader, deps = [], options = {}) {
         if (!cancelled) {
           setMovies(Array.isArray(result) ? result : []);
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
           setMovies([]);
-          setError(errorMessage);
+          setError(error?.message || errorMessage);
         }
       } finally {
         if (!cancelled) {

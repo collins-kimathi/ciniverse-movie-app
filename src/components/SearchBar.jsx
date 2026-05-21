@@ -1,6 +1,6 @@
 // UI component: SearchBar.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { searchMovieSuggestions } from "../api/tmdb";
+import { searchPlayableSuggestions } from "../api/tmdb";
 import { clearRecentSearches, pushRecentSearch, readRecentSearches } from "../utils/library";
 import { trackEvent } from "../utils/analytics";
 
@@ -30,7 +30,7 @@ export default function SearchBar({ onSearch }) {
     let cancelled = false;
     const timeout = window.setTimeout(async () => {
       try {
-        const data = await searchMovieSuggestions(clean);
+        const data = await searchPlayableSuggestions(clean);
         const next = (data.results || [])
           .map((item) => item.title || item.name || "")
           .filter(Boolean)
@@ -190,8 +190,8 @@ export default function SearchBar({ onSearch }) {
             }, 120)
           }
           onKeyDown={onInputKeyDown}
-          placeholder="Search movies, trailers, notes"
-          aria-label="Search movies, trailers, notes"
+          placeholder="Search movies, shows, trailers"
+          aria-label="Search movies, shows, trailers"
           aria-haspopup="listbox"
           aria-expanded={focused && suggestionItems.length > 0}
           aria-controls="movie-search-suggestions"

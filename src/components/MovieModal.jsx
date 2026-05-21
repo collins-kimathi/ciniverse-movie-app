@@ -12,33 +12,14 @@ import {
   getMovieNotebookEntry,
   isInMyList,
   toggleMyList,
+  upsertContinueWatching,
   upsertMovieNotebookFeedback,
 } from "../utils/library";
 import { trackEvent } from "../utils/analytics";
 import { fetchTitleAvailability, isAvailabilityEnabled } from "../api/availability";
-
-const VIDKING_BASE_URL = "https://www.vidking.net/embed";
-const VIDKING_COLOR = "e50914";
+import { buildVidkingUrl } from "../utils/streaming";
 const PROGRESS_SAVE_INTERVAL_MS = 5000;
 const PROGRESS_SAVE_EVENTS = new Set(["pause", "ended", "seeked"]);
-
-function buildVidkingUrl({ id, mediaType, season = 1, episode = 1 }) {
-  const path =
-    mediaType === "tv"
-      ? `/tv/${id}/${season || 1}/${episode || 1}`
-      : `/movie/${id}`;
-  const params = new URLSearchParams({
-    color: VIDKING_COLOR,
-    autoPlay: "true",
-  });
-
-  if (mediaType === "tv") {
-    params.set("nextEpisode", "true");
-    params.set("episodeSelector", "true");
-  }
-
-  return `${VIDKING_BASE_URL}${path}?${params.toString()}`;
-}
 
 export default function MovieModal({ movie, onClose }) {
   const [activeMovie, setActiveMovie] = useState(movie);
@@ -144,6 +125,22 @@ export default function MovieModal({ movie, onClose }) {
             updatedAt: now,
           })
         );
+        upsertContinueWatching({
+          id,
+          mediaType,
+          title:
+            details?.title ||
+            details?.name ||
+            activeMovie.title ||
+            activeMovie.name ||
+            "Untitled",
+          poster_path: details?.poster_path || activeMovie.poster_path || "",
+          season,
+          episode,
+          resumeSeconds: Number(eventData.currentTime || 0),
+          durationSeconds: Number(eventData.duration || 0),
+          progress: Number(eventData.progress || 0),
+        });
         lastProgressSaveRef.current = now;
       } catch {
         // Ignore storage failures so playback is never interrupted.
@@ -152,7 +149,17 @@ export default function MovieModal({ movie, onClose }) {
 
     window.addEventListener("message", onPlayerMessage);
     return () => window.removeEventListener("message", onPlayerMessage);
-  }, [activeMovie.id, activeMovie.mediaType, selectedEpisode, selectedSeason, showPlayer]);
+  }, [
+    activeMovie.id,
+    activeMovie.mediaType,
+    activeMovie.name,
+    activeMovie.poster_path,
+    activeMovie.title,
+    details,
+    selectedEpisode,
+    selectedSeason,
+    showPlayer,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
