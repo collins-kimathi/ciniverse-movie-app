@@ -1236,6 +1236,7 @@ body {
 
 .player-panel {
     margin: 0 0 1rem;
+    position: relative;
 }
 
 .player-controls {
@@ -1243,6 +1244,8 @@ body {
     flex-wrap: wrap;
     gap: 0.65rem;
     margin-bottom: 0.65rem;
+    position: relative;
+    z-index: 2;
 }
 
 .player-controls label {
@@ -1257,9 +1260,15 @@ body {
     min-width: 9rem;
     border: 1px solid var(--border);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
+    background: #15171d;
     color: var(--text);
     padding: 0.55rem 0.65rem;
+    color-scheme: dark;
+}
+
+.player-controls option {
+    background: #15171d;
+    color: var(--text);
 }
 
 .full-player-wrap iframe,
