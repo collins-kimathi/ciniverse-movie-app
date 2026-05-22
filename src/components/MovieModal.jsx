@@ -641,6 +641,11 @@ export default function MovieModal({ movie, onClose }) {
               {availabilityLoading ? (
                 <p className="status-line">Checking where you can stream this title...</p>
               ) : null}
+              {!availabilityLoading && availability?.error ? (
+                <p className="status-line error" aria-live="polite">
+                  {availability.error}
+                </p>
+              ) : null}
               {providerChips.length ? (
                 <div className="providers" aria-label="Streaming providers">
                   <p className="status-line provider-list">Available On</p>
@@ -717,6 +722,7 @@ export default function MovieModal({ movie, onClose }) {
                     title={`${title} player`}
                     src={playerSrc}
                     allow="autoplay; encrypted-media; picture-in-picture"
+                    referrerPolicy="no-referrer"
                     allowFullScreen
                   />
                 </div>

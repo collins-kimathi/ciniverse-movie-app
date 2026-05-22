@@ -8,7 +8,7 @@ const STREAMING_AVAILABILITY_LANGUAGE =
   import.meta.env.VITE_STREAMING_AVAILABILITY_LANGUAGE || "en";
 
 export const isStreamingAvailabilityEnabled =
-  import.meta.env.VITE_STREAMING_AVAILABILITY_ENABLED === "true";
+  import.meta.env.VITE_STREAMING_AVAILABILITY_ENABLED !== "false";
 
 function collectServices(value, found = []) {
   if (Array.isArray(value)) {
@@ -74,7 +74,14 @@ export async function fetchStreamingAvailability(mediaType, id) {
   }
 
   if (!response.ok) {
-    throw new Error(`Streaming availability request failed: ${response.status}`);
+    let message = `Streaming availability request failed: ${response.status}`;
+    try {
+      const payload = await response.json();
+      message = payload?.error || message;
+    } catch {
+      // Keep the status-based message when the response body is not JSON.
+    }
+    throw new Error(message);
   }
 
   const payload = await response.json();

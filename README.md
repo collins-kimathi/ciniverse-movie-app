@@ -52,7 +52,7 @@ TMDB_API_KEY=your_tmdb_api_key
 PLAYBACK_API_BASE_URL=http://localhost:4000
 PLAYBACK_API_KEY=your_playback_api_key
 
-# Optional public toggles
+# Optional public toggles. Set to false only when you want to disable the feature in the browser.
 VITE_PLAYBACK_ENABLED=true
 
 # RapidAPI Streaming Availability proxy settings (server-only key)
@@ -78,6 +78,7 @@ Streaming Availability and licensed playback keys are also read by same-origin `
 Full-movie playback works only from your licensed backend.
 Shared notes/ratings work from the Community API endpoints.
 Streaming badges can come from the Streaming Availability RapidAPI service.
+Deployment health is available at `/api/health`; it reports which server-side services are configured without exposing secrets.
 
 ### Licensed playback endpoint contract
 

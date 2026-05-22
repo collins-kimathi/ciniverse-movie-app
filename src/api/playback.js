@@ -4,7 +4,7 @@ const PLAYBACK_API_BASE_URL = (import.meta.env.VITE_PLAYBACK_API_BASE_URL || "/a
   ""
 );
 
-export const isPlaybackEnabled = import.meta.env.VITE_PLAYBACK_ENABLED === "true";
+export const isPlaybackEnabled = import.meta.env.VITE_PLAYBACK_ENABLED !== "false";
 
 function normalizePlayback(payload) {
   if (!payload || typeof payload !== "object") {
@@ -39,7 +39,14 @@ export async function fetchLicensedPlaybackSession(movieId) {
   }
 
   if (!response.ok) {
-    throw new Error(`Playback request failed: ${response.status}`);
+    let message = `Playback request failed: ${response.status}`;
+    try {
+      const payload = await response.json();
+      message = payload?.error || message;
+    } catch {
+      // Keep the status-based message when the response body is not JSON.
+    }
+    throw new Error(message);
   }
 
   const payload = await response.json();

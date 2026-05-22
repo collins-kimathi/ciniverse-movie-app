@@ -41,7 +41,11 @@ export default async function handler(req, res) {
   }
 
   if (!STREAMING_AVAILABILITY_API_KEY) {
-    res.status(204).end();
+    res.status(503).json({
+      code: "STREAMING_AVAILABILITY_NOT_CONFIGURED",
+      error:
+        "Streaming availability is not configured on this deployment. Add STREAMING_AVAILABILITY_API_KEY in Vercel and redeploy.",
+    });
     return;
   }
 
@@ -76,6 +80,7 @@ export default async function handler(req, res) {
       return;
     }
 
+    res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400");
     res.status(response.status).json(payload || { error: "Provider returned an empty response" });
   } catch (error) {
     res.status(502).json({ error: error?.message || "Streaming availability request failed" });
