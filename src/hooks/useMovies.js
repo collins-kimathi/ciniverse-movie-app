@@ -1,6 +1,14 @@
 // Custom React hook: useMovies.
 import { useEffect, useState } from "react";
 
+function getDisplayError(error, fallback) {
+  const message = error?.message || "";
+  if (!message || message === "Failed to fetch" || message.includes("NetworkError")) {
+    return fallback;
+  }
+  return message;
+}
+
 export default function useMovies(loader, deps = [], options = {}) {
   const { enabled = true, initialData = [], errorMessage = "Failed to load movies." } = options;
   const [movies, setMovies] = useState(initialData);
@@ -30,7 +38,7 @@ export default function useMovies(loader, deps = [], options = {}) {
       } catch (error) {
         if (!cancelled) {
           setMovies([]);
-          setError(error?.message || errorMessage);
+          setError(getDisplayError(error, errorMessage));
         }
       } finally {
         if (!cancelled) {

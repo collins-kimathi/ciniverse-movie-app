@@ -12,6 +12,13 @@ test("buildVidkingUrl creates movie embed URLs", () => {
   assert.equal(url.searchParams.get("color"), "e50914");
 });
 
+test("buildVidkingUrl adds saved progress when provided", () => {
+  const url = new URL(buildVidkingUrl({ id: 1078605, mediaType: "movie", progress: 120.8 }));
+
+  assert.equal(url.pathname, "/embed/movie/1078605");
+  assert.equal(url.searchParams.get("progress"), "120");
+});
+
 test("buildVidkingUrl creates tv embed URLs with season and episode selectors", () => {
   const url = new URL(buildVidkingUrl({ id: 1399, mediaType: "tv", season: 3, episode: 4 }));
 

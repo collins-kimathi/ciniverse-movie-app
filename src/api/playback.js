@@ -4,7 +4,7 @@ const PLAYBACK_API_BASE_URL = (import.meta.env.VITE_PLAYBACK_API_BASE_URL || "/a
   ""
 );
 
-export const isPlaybackEnabled = import.meta.env.VITE_PLAYBACK_ENABLED !== "false";
+export const isPlaybackEnabled = import.meta.env.VITE_PLAYBACK_ENABLED === "true";
 
 function normalizePlayback(payload) {
   if (!payload || typeof payload !== "object") {

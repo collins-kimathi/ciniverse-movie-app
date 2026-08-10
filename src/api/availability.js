@@ -7,9 +7,19 @@ import {
 
 export const isAvailabilityEnabled = isPlaybackEnabled || isStreamingAvailabilityEnabled;
 
-export async function fetchTitleAvailability(id, mediaType = "movie") {
-  let lastError = "";
+function unavailable(error = "") {
+  return {
+    available: false,
+    label: "",
+    source: "",
+    providers: [],
+    actionUrl: "",
+    actionLabel: "",
+    error,
+  };
+}
 
+export async function fetchTitleAvailability(id, mediaType = "movie") {
   if (isStreamingAvailabilityEnabled) {
     try {
       const streaming = await fetchStreamingAvailability(mediaType, id);
@@ -25,8 +35,8 @@ export async function fetchTitleAvailability(id, mediaType = "movie") {
           error: "",
         };
       }
-    } catch (error) {
-      lastError = error?.message || "Streaming availability is unavailable right now.";
+    } catch {
+      // Provider badges are optional; playback should keep working if this check fails.
     }
   }
 
@@ -46,18 +56,10 @@ export async function fetchTitleAvailability(id, mediaType = "movie") {
           error: "",
         };
       }
-    } catch (error) {
-      lastError = error?.message || lastError || "Licensed playback is unavailable right now.";
+    } catch {
+      // Licensed provider lookup is optional; the embedded player remains available.
     }
   }
 
-  return {
-    available: false,
-    label: "",
-    source: "",
-    providers: [],
-    actionUrl: "",
-    actionLabel: "",
-    error: lastError,
-  };
+  return unavailable();
 }

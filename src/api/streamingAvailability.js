@@ -8,7 +8,7 @@ const STREAMING_AVAILABILITY_LANGUAGE =
   import.meta.env.VITE_STREAMING_AVAILABILITY_LANGUAGE || "en";
 
 export const isStreamingAvailabilityEnabled =
-  import.meta.env.VITE_STREAMING_AVAILABILITY_ENABLED !== "false";
+  import.meta.env.VITE_STREAMING_AVAILABILITY_ENABLED === "true";
 
 function collectServices(value, found = []) {
   if (Array.isArray(value)) {

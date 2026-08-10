@@ -21,6 +21,21 @@ import { buildVidkingUrl } from "../utils/streaming";
 const PROGRESS_SAVE_INTERVAL_MS = 5000;
 const PROGRESS_SAVE_EVENTS = new Set(["pause", "ended", "seeked"]);
 
+function getProgressKey({ mediaType, id, season, episode }) {
+  return `ciniverse:watch-progress:${mediaType}:${id}:${season}:${episode}`;
+}
+
+function readSavedProgressSeconds({ mediaType, id, season, episode }) {
+  try {
+    const saved = window.localStorage.getItem(getProgressKey({ mediaType, id, season, episode }));
+    const parsed = saved ? JSON.parse(saved) : null;
+    const seconds = Number(parsed?.currentTime || 0);
+    return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export default function MovieModal({ movie, onClose }) {
   const [activeMovie, setActiveMovie] = useState(movie);
   const [details, setDetails] = useState(null);
@@ -43,7 +58,6 @@ export default function MovieModal({ movie, onClose }) {
   const [communityLoading, setCommunityLoading] = useState(false);
   const [communityError, setCommunityError] = useState("");
   const [availability, setAvailability] = useState(null);
-  const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
@@ -103,7 +117,10 @@ export default function MovieModal({ movie, onClose }) {
       const id = eventData.id || activeMovie.id;
       const season = eventData.season || selectedSeason;
       const episode = eventData.episode || selectedEpisode;
-      const key = `ciniverse:watch-progress:${mediaType}:${id}:${season}:${episode}`;
+      const key = getProgressKey({ mediaType, id, season, episode });
+      const currentTime = Number(eventData.currentTime || 0);
+      const duration = Number(eventData.duration || 0);
+      const progress = Number(eventData.progress || 0);
       const now = Date.now();
       const shouldSaveImmediately = PROGRESS_SAVE_EVENTS.has(eventData.event);
 
@@ -119,9 +136,9 @@ export default function MovieModal({ movie, onClose }) {
           key,
           JSON.stringify({
             event: eventData.event,
-            currentTime: eventData.currentTime,
-            duration: eventData.duration,
-            progress: eventData.progress,
+            currentTime,
+            duration,
+            progress,
             updatedAt: now,
           })
         );
@@ -137,9 +154,9 @@ export default function MovieModal({ movie, onClose }) {
           poster_path: details?.poster_path || activeMovie.poster_path || "",
           season,
           episode,
-          resumeSeconds: Number(eventData.currentTime || 0),
-          durationSeconds: Number(eventData.duration || 0),
-          progress: Number(eventData.progress || 0),
+          resumeSeconds: currentTime,
+          durationSeconds: duration,
+          progress,
         });
         lastProgressSaveRef.current = now;
       } catch {
@@ -200,11 +217,9 @@ export default function MovieModal({ movie, onClose }) {
     async function loadAvailability() {
       if (!isAvailabilityEnabled) {
         setAvailability(null);
-        setAvailabilityLoading(false);
         return;
       }
 
-      setAvailabilityLoading(true);
       try {
         const data = await fetchTitleAvailability(
           activeMovie.id,
@@ -216,10 +231,6 @@ export default function MovieModal({ movie, onClose }) {
       } catch {
         if (!cancelled) {
           setAvailability(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setAvailabilityLoading(false);
         }
       }
     }
@@ -406,11 +417,19 @@ export default function MovieModal({ movie, onClose }) {
     availableSeasons[0] ||
     null;
   const episodeCount = selectedSeasonInfo?.episode_count || 1;
-  const playerSrc = buildVidkingUrl({
+  const mediaType = activeMovie.mediaType || "movie";
+  const playerProgress = readSavedProgressSeconds({
     id: activeMovie.id,
-    mediaType: activeMovie.mediaType || "movie",
+    mediaType,
     season: selectedSeason,
     episode: selectedEpisode,
+  });
+  const playerSrc = buildVidkingUrl({
+    id: activeMovie.id,
+    mediaType,
+    season: selectedSeason,
+    episode: selectedEpisode,
+    progress: playerProgress,
   });
 
   function onWatchNow() {
@@ -638,14 +657,6 @@ export default function MovieModal({ movie, onClose }) {
                 </button>
                 {shareStatus ? <span className="status-inline">{shareStatus}</span> : null}
               </div>
-              {availabilityLoading ? (
-                <p className="status-line">Checking where you can stream this title...</p>
-              ) : null}
-              {!availabilityLoading && availability?.error ? (
-                <p className="status-line error" aria-live="polite">
-                  {availability.error}
-                </p>
-              ) : null}
               {providerChips.length ? (
                 <div className="providers" aria-label="Streaming providers">
                   <p className="status-line provider-list">Available On</p>
@@ -722,7 +733,7 @@ export default function MovieModal({ movie, onClose }) {
                     title={`${title} player`}
                     src={playerSrc}
                     allow="autoplay; encrypted-media; picture-in-picture"
-                    referrerPolicy="no-referrer"
+                    referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen
                   />
                 </div>
