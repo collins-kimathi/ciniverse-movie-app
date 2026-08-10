@@ -2,57 +2,57 @@
 import { useEffect, useState } from "react";
 
 function getDisplayError(error, fallback) {
-  const message = error?.message || "";
-  if (!message || message === "Failed to fetch" || message.includes("NetworkError")) {
-    return fallback;
-  }
-  return message;
+    const message = error ? .message || "";
+    if (!message || message === "Failed to fetch" || message.includes("NetworkError")) {
+        return fallback;
+    }
+    return message;
 }
 
 export default function useMovies(loader, deps = [], options = {}) {
-  const { enabled = true, initialData = [], errorMessage = "Failed to load movies." } = options;
-  const [movies, setMovies] = useState(initialData);
-  const [loading, setLoading] = useState(Boolean(enabled));
-  const [error, setError] = useState("");
-  const [reloadTick, setReloadTick] = useState(0);
+    const { enabled = true, initialData = [], errorMessage = "Failed to load movies." } = options;
+    const [movies, setMovies] = useState(initialData);
+    const [loading, setLoading] = useState(Boolean(enabled));
+    const [error, setError] = useState("");
+    const [reloadTick, setReloadTick] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
+    useEffect(() => {
+        let cancelled = false;
 
-    async function run() {
-      if (!enabled) {
-        setMovies(initialData);
-        setLoading(false);
-        setError("");
-        return;
-      }
+        async function run() {
+            if (!enabled) {
+                setMovies(initialData);
+                setLoading(false);
+                setError("");
+                return;
+            }
 
-      setLoading(true);
-      setError("");
+            setLoading(true);
+            setError("");
 
-      try {
-        const result = await loader();
-        if (!cancelled) {
-          setMovies(Array.isArray(result) ? result : []);
+            try {
+                const result = await loader();
+                if (!cancelled) {
+                    setMovies(Array.isArray(result) ? result : []);
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setMovies([]);
+                    setError(getDisplayError(error, errorMessage));
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
         }
-      } catch (error) {
-        if (!cancelled) {
-          setMovies([]);
-          setError(getDisplayError(error, errorMessage));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
 
-    run();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, reloadTick, ...deps]);
+        run();
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [enabled, reloadTick, ...deps]);
 
-  return { movies, loading, error, setMovies, retry: () => setReloadTick((v) => v + 1) };
+    return { movies, loading, error, setMovies, retry: () => setReloadTick((v) => v + 1) };
 }
