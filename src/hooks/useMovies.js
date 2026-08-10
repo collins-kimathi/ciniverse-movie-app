@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 function getDisplayError(error, fallback) {
-    const message = error ? .message || "";
+    const message = error?.message || "";
     if (!message || message === "Failed to fetch" || message.includes("NetworkError")) {
         return fallback;
     }
